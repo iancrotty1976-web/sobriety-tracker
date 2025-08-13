@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Drinking & Sobriety Tracker</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh; padding: 20px; color: #1f2937;
+    }
+    .container { max-width: 1000px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+    .header { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 28px 24px; }
+    .header h1 { font-size: 2.2rem; margin-bottom: 6px; }
+    .header p { opacity: 0.95; }
+
+    .topbar { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: center; }
+    .quote { background: rgba(255,255,255,0.15); border-radius: 12px; padding: 14px 16px; font-size: 0.98rem; display: flex; align-items: center; gap: 10px; }
+    .quote small { opacity: 0.9; }
+
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 20px; background: #f8fafc; }
+    .stat-card { background: white; padding: 16px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+    .stat-number { font-size: 1.8rem; font-weight: 800; color: #2563eb; margin-bottom: 6px; }
+    .stat-label { color: #6b7280; font-size: 0.9rem; }
+
+    .grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; padding: 20px; }
+
+    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+    .card h3 { font-size: 1.2rem; margin-bottom: 12px; color: #111827; }
+    label { display: block; margin-bottom: 8px; font-weight: 600; color: #374151; }
+    input, select, textarea { width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 15px; transition: border-color .2s; }
+    textarea { min-height: 110px; resize: vertical; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #60a5fa; }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .btn { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border: none; padding: 12px 16px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+    .btn:hover { filter: brightness(1.05); }
+    .btn.secondary { background: #10b981; }
+    .btn.danger { background: #ef4444; }
+    .btn.ghost { background: #111827; color: #fff; }
+
+    .log-entry { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f3f4f6; }
+    .log-entry:last-child { border-bottom: none; }
+    .drink-name { font-weight: 700; color: #111827; }
+    .muted { color: #6b7280; font-size: 0.92rem; }
+
+    .mini { font-size: 0.86rem; color: #6b7280; }
+
+    .progress { height: 12px; background: #e5e7eb; border-radius: 999px; overflow: hidden; }
+    .progress > div { height: 100%; background: linear-gradient(90deg, #22c55e, #10b981); width: 0%; transition: width .4s ease; }
+
+    .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .day { text-align: center; padding: 8px 0; border-radius: 8px; background: #f9fafb; border: 1px solid #f3f4f6; font-size: 0.9rem; }
+    .day.good { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+    .day.bad { background: #fef2f2; border-color: #fecaca; color: #7f1d1d; }
+    .day.neutral { background: #eff6ff; border-color: #bfdbfe; color: #1e3a8a; }
+
+    .footer { text-align: center; padding: 18px; color: #6b7280; font-size: 0.9rem; }
+
+    .toast {
+      position: fixed; right: 16px; bottom: 16px; background: #111827; color: white;
+      padding: 12px 14px; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,.2);
+      display: none; max-width: 320px; line-height: 1.3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="topbar">
+        <div>
+          <h1>🌿 Sobriety & Drinking Tracker</h1>
+          <p>Build healthy habits, track your progress, and reflect daily.</p>
+        </div>
+        <div class="quote">
+          <div>💬</div>
+          <div>
+            <div id="quoteText">Loading an encouraging quote...</div>
+            <small id="quoteSource" class="mini"></small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-number" id="sobrietyDays">0</div>
+        <div class="stat-label">Days Sober</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="streak">0</div>
+        <div class="stat-label">Current Streak</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="drinksThisWeek">0</div>
+        <div class="stat-label">Drinks This Week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="moneySaved">£0</div>
+        <div class="stat-label">Estimated Money Saved</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Add a Drink</h3>
+        <form id="drinkForm">
+          <div class="row">
+            <div>
+              <label for="drinkType">Drink Type</label>
+              <select id="drinkType" required>
+                <option value="">Select type</option>
+                <option value="beer">Beer</option>
+                <option value="wine">Wine</option>
+                <option value="spirits">Spirits</option>
+                <option value="cocktail">Cocktail</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label for="drinkName">Name (optional)</label>
+              <input type="text" id="drinkName" placeholder="e.g., IPA, Merlot" />
+            </div>
+          </div>
+          <div class="row" style="margin-top: 12px;">
+            <div>
+              <label for="volume">Volume (ml)</label>
+              <input type="number" id="volume" required min="1" placeholder="330" />
+            </div>
+            <div>
+              <label for="abv">Alcohol % (ABV)</label>
+              <input type="number" id="abv" required min="0" max="100" step="0.1" placeholder="5.0" />
+            </div>
+          </div>
+          <div style="margin-top: 12px;">
+            <label for="drinkTime">Time</label>
+            <input type="datetime-local" id="drinkTime" required />
+          </div>
+          <div style="display:flex; gap: 10px; margin-top: 14px;">
+            <button type="submit" class="btn">Add Drink</button>
+            <button type="button" id="undoLastDrink" class="btn danger" title="Remove latest drink">Undo Last</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>Daily Diary</h3>
+        <form id="diaryForm">
+          <label for="diaryDate">Date</label>
+          <input type="date" id="diaryDate" required />
+          <div class="row" style="margin-top: 10px;">
+            <div>
+              <label for="mood">Mood</label>
+              <select id="mood" required>
+                <option value="great">Great</option>
+                <option value="good">Good</option>
+                <option value="ok">OK</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <div>
+              <label for="craving">Cravings</label>
+              <select id="craving" required>
+                <option value="none">None</option>
+                <option value="mild">Mild</option>
+                <option value="moderate">Moderate</option>
+                <option value="strong">Strong</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top: 10px;">
+            <label for="entry">Notes</label>
+            <textarea id="entry" placeholder="How are you feeling today? What helped? What was hard?"></textarea>
+          </div>
+          <div style="display:flex; gap: 10px; margin-top: 12px;">
+            <button type="submit" class="btn secondary">Save Entry</button>
+            <button type="button" id="todayPrompt" class="btn" title="Add a quick prompt">Add Prompt</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Recent Drinks</h3>
+        <div id="drinksList" class="mini">No drinks yet.</div>
+      </div>
+
+      <div class="card">
+        <h3>Progress</h3>
+        <div class="mini" style="margin-bottom: 8px; display:flex; justify-content: space-between;">
+          <span>Current streak</span>
+          <span id="streakLabel">0 days</span>
+        </div>
+        <div class="progress"><div id="streakBar"></div></div>
+        <div class="calendar" style="margin-top: 12px;" id="calendar"></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Diary Entries</h3>
+        <div id="diaryList" class="mini">No entries yet.</div>
+      </div>
+
+      <div class="card">
+        <h3>Reminders & Settings</h3>
+        <div class="mini" style="margin-bottom:10px">Enable gentle daily reminders to log drinks or write your diary. These work while the page is open; browser push needs extra setup.</div>
+        <div class="row">
+          <div>
+            <label><input type="checkbox" id="enableNotifications" /> Enable notifications</label>
+          </div>
+          <div>
+            <button id="requestPermission" class="btn ghost" type="button">Grant Permission</button>
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <div>
+            <label for="drinkReminder">Drink reminder time</label>
+            <input type="time" id="drinkReminder" />
+          </div>
+          <div>
+            <label for="diaryReminder">Diary reminder time</label>
+            <input type="time" id="diaryReminder" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <div>
+            <label for="dailySpend">Daily spend avoided (£)</label>
+            <input type="number" id="dailySpend" min="0" step="0.5" placeholder="6" />
+          </div>
+          <div>
+            <label for="streakTarget">Streak goal (days)</label>
+            <input type="number" id="streakTarget" min="1" step="1" placeholder="30" />
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; margin-top: 12px;">
+          <button id="saveSettings" class="btn secondary" type="button">Save Settings</button>
+          <button id="testNotification" class="btn" type="button">Test Notification</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">Data is stored locally in your browser. You're doing great—one day at a time. 💚</div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    class SobrietyTracker {
+      constructor() {
+        // Core state
+        this.state = JSON.parse(localStorage.getItem('sobrietyState')) || {
+          drinks: [], // {id, type, name, volume, abv, units, timestamp}
+          diary: {},  // keyed by YYYY-MM-DD: { mood, craving, entry }
+          soberStart: null, // ISO string of last reset-to-sober start
+          pricePerUnit: 2.5 // GBP per UK alcohol unit (customizable)
+        };
+
+        // Settings
+        this.settings = JSON.parse(localStorage.getItem('sobrietySettings')) || {
+          enableNotifications: false,
+          drinkReminder: '20:00',
+          diaryReminder: '21:00',
+          dailySpend: Number(localStorage.getItem('dailySpend')) || 6,
+          streakTarget: Number(localStorage.getItem('streakTarget')) || 30,
+          lastShown: {} // {keyDate: 'YYYY-MM-DD'} per reminder key
+        };
+
+        // Quotes
+        this.quotes = [
+          { t: "One day at a time.", s: "AA Slogan" },
+          { t: "Small steps every day add up to big change.", s: "Unknown" },
+          { t: "You are stronger than your strongest excuse.", s: "Unknown" },
+          { t: "Cravings pass. Stay the course.", s: "Recovery Reminder" },
+          { t: "Progress, not perfection.", s: "AA Slogan" },
+          { t: "Your future needs you. Your past doesn't.", s: "Unknown" },
+          { t: "What you do today can improve all your tomorrows.", s: "Ralph Marston" },
+          { t: "Recovery is a journey, not a destination.", s: "Unknown" }
+        ];
+
+        this.cacheEls();
+        this.initDefaults();
+        this.bindEvents();
+        this.renderAll();
+        this.startReminderLoop();
+      }
+
+      cacheEls() {
+        this.$drinkForm = document.getElementById('drinkForm');
+        this.$drinkTime = document.getElementById('drinkTime');
+        this.$undoLastDrink = document.getElementById('undoLastDrink');
+        this.$drinksList = document.getElementById('drinksList');
+
+        this.$diaryForm = document.getElementById('diaryForm');
+        this.$diaryDate = document.getElementById('diaryDate');
+        this.$mood = document.getElementById('mood');
+        this.$craving = document.getElementById('craving');
+        this.$entry = document.getElementById('entry');
+        this.$todayPrompt = document.getElementById('todayPrompt');
+        this.$diaryList = document.getElementById('diaryList');
+
+        this.$sobrietyDays = document.getElementById('sobrietyDays');
+        this.$streak = document.getElementById('streak');
+        this.$streakLabel = document.getElementById('streakLabel');
+        this.$streakBar = document.getElementById('streakBar');
+        this.$drinksThisWeek = document.getElementById('drinksThisWeek');
+        this.$moneySaved = document.getElementById('moneySaved');
+
+        this.$calendar = document.getElementById('calendar');
+        this.$quoteText = document.getElementById('quoteText');
+        this.$quoteSource = document.getElementById('quoteSource');
+
+        // Settings
+        this.$enableNotifications = document.getElementById('enableNotifications');
+        this.$requestPermission = document.getElementById('requestPermission');
+        this.$drinkReminder = document.getElementById('drinkReminder');
+        this.$diaryReminder = document.getElementById('diaryReminder');
+        this.$dailySpend = document.getElementById('dailySpend');
+        this.$streakTargetInput = document.getElementById('streakTarget');
+        this.$saveSettings = document.getElementById('saveSettings');
+        this.$testNotification = document.getElementById('testNotification');
+
+        this.$toast = document.getElementById('toast');
+      }
+
+      initDefaults() {
+        // default times
+        const now = new Date();
+        this.$drinkTime.value = now.toISOString().slice(0, 16);
+        this.$diaryDate.value = now.toISOString().slice(0,10);
+
+        if (!this.state.soberStart) {
+          // If there are past drinks, start soberStart after the last drink; otherwise today 00:00
+          const lastDrink = this.state.drinks[0];
+          const start = lastDrink ? new Date(lastDrink.timestamp) : new Date();
+          if (!lastDrink) start.setHours(0,0,0,0);
+          this.state.soberStart = start.toISOString();
+          this.save();
+        }
+
+        // Settings UI values
+        this.$enableNotifications.checked = !!this.settings.enableNotifications;
+        this.$drinkReminder.value = this.settings.drinkReminder || '';
+        this.$diaryReminder.value = this.settings.diaryReminder || '';
+        this.$dailySpend.value = this.settings.dailySpend;
+        this.$streakTargetInput.value = this.settings.streakTarget;
+
+        this.showRandomQuote();
+      }
+
+      bindEvents() {
+        this.$drinkForm.addEventListener('submit', (e)=>{ e.preventDefault(); this.addDrink(); });
+        this.$undoLastDrink.addEventListener('click', ()=> this.undoLastDrink());
+
+        this.$diaryForm.addEventListener('submit', (e)=>{ e.preventDefault(); this.saveDiaryEntry(); });
+        this.$todayPrompt.addEventListener('click', ()=> this.appendPrompt());
+
+        // Settings
+        this.$requestPermission.addEventListener('click', ()=> this.requestNotificationPermission());
+        this.$saveSettings.addEventListener('click', ()=> this.saveSettings());
+        this.$testNotification.addEventListener('click', ()=> this.showReminder('Test Notification', 'This is how a reminder will look. You got this! 💚'));
+      }
+
+      // Quotes
+      showRandomQuote() {
+        const q = this.quotes[Math.floor(Math.random()*this.quotes.length)];
+        this.$quoteText.textContent = `“${q.t}”`;
+        this.$quoteSource.textContent = q.s ? `— ${q.s}` : '';
+      }
+
+      // Drinks
+      addDrink() {
+        const type = document.getElementById('drinkType').value;
+        const name = document.getElementById('drinkName').value || this.defaultName(type);
+        const volume = parseFloat(document.getElementById('volume').value);
+        const abv = parseFloat(document.getElementById('abv').value);
+        const time = new Date(this.$drinkTime.value);
+        if (!type || isNaN(volume) || isNaN(abv) || !time) return;
+
+        const units = ((volume * abv) / 1000); // UK units
+        const item = { id: Date.now(), type, name, volume, abv, units: Number(units.toFixed(2)), timestamp: time.toISOString() };
+        this.state.drinks.unshift(item);
+
+        // Reset sobriety start to the moment after this drink
+        const nextMinute = new Date(time); nextMinute.setMinutes(time.getMinutes()+1); nextMinute.setSeconds(0,0);
+        this.state.soberStart = nextMinute.toISOString();
+
+        this.save();
+        this.renderAll();
+        this.$drinkForm.reset();
+        this.$drinkTime.value = new Date().toISOString().slice(0, 16);
+      }
+
+      undoLastDrink() {
+        if (this.state.drinks.length === 0) return;
+        const removed = this.state.drinks.shift();
+        // If we removed the most recent drink, update soberStart to the next most recent
+        const last = this.state.drinks[0];
+        if (last) {
+          const t = new Date(last.timestamp);
+          t.setMinutes(t.getMinutes()+1); t.setSeconds(0,0);
+          this.state.soberStart = t.toISOString();
+        } else {
+          const d = new Date(); d.setHours(0,0,0,0); this.state.soberStart = d.toISOString();
+        }
+        this.save();
+        this.renderAll();
+      }
+
+      defaultName(type) {
+        const map = { beer: 'Beer', wine: 'Wine', spirits: 'Spirits', cocktail: 'Cocktail', other: 'Alcoholic Drink' };
+        return map[type] || 'Drink';
+      }
+
+      // Diary
+      saveDiaryEntry() {
+        const date = this.$diaryDate.value; // YYYY-MM-DD
+        if (!date) return;
+        this.state.diary[date] = {
+          mood: this.$mood.value,
+          craving: this.$craving.value,
+          entry: this.$entry.value.trim()
+        };
+        this.save();
+        this.renderDiary();
+        this.flash(this.$diaryForm, 'Saved!');
+      }
+
+      appendPrompt() {
+        const prompts = [
+          'What’s one thing you’re grateful for today?',
+          'What helped you manage cravings today?',
+          'What would the future you thank you for doing today?',
+          'What triggered difficult moments and how did you respond?',
+          'Name a small win you had today.',
+        ];
+        const p = prompts[Math.floor(Math.random()*prompts.length)];
+        this.$entry.value = (this.$entry.value + '\n\n' + 'Prompt: ' + p).trim();
+        this.$entry.focus();
+      }
+
+      // Computations
+      getDaysSober() {
+        const start = new Date(this.state.soberStart);
+        const now = new Date();
+        const ms = now - start;
+        return Math.max(0, Math.floor(ms / (1000*60*60*24)));
+      }
+
+      getCurrentStreakDays() { return this.getDaysSober(); }
+
+      getDrinksThisWeek() {
+        const now = new Date();
+        const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay()); weekStart.setHours(0,0,0,0);
+        return this.state.drinks.filter(d => new Date(d.timestamp) >= weekStart).length;
+      }
+
+      getMoneySaved() {
+        const daily = Number(this.settings.dailySpend) || 6;
+        return this.getDaysSober() * daily;
+      }
+
+      // Rendering
+      renderAll() {
+        this.renderStats();
+        this.renderDrinks();
+        this.renderDiary();
+        this.renderCalendar();
+      }
+
+      renderStats() {
+        const daysSober = this.getDaysSober();
+        const streak = this.getCurrentStreakDays();
+        const drinksWeek = this.getDrinksThisWeek();
+        const money = this.getMoneySaved();
+
+        this.$sobrietyDays.textContent = daysSober;
+        this.$streak.textContent = streak;
+        this.$drinksThisWeek.textContent = drinksWeek;
+        this.$moneySaved.textContent = `£${money.toFixed(0)}`;
+
+        const target = Number(this.settings.streakTarget) || 30; // milestone
+        const pct = Math.min(100, Math.round((streak / target) * 100));
+        this.$streakLabel.textContent = `${streak} / ${target} days`;
+        this.$streakBar.style.width = pct + '%';
+      }
+
+      renderDrinks() {
+        if (this.state.drinks.length === 0) { this.$drinksList.textContent = 'No drinks yet.'; return; }
+        const items = this.state.drinks.slice(0, 12).map(d => {
+          const t = new Date(d.timestamp).toLocaleString();
+          return `<div class="log-entry">
+            <div>
+              <div class="drink-name">${d.name}</div>
+              <div class="muted">${d.volume}ml • ${d.abv}% • ${d.units.toFixed(1)} units • ${t}</div>
+            </div>
+            <button class="btn danger mini" onclick="app.deleteDrink(${d.id})">Delete</button>
+          </div>`;
+        }).join('');
+        this.$drinksList.innerHTML = items;
+      }
+
+      deleteDrink(id) {
+        this.state.drinks = this.state.drinks.filter(d => d.id !== id);
+        // Recompute soberStart from the most recent remaining drink
+        const last = this.state.drinks[0];
+        if (last) {
+          const t = new Date(last.timestamp); t.setMinutes(t.getMinutes()+1); t.setSeconds(0,0);
+          this.state.soberStart = t.toISOString();
+        } else {
+          const d = new Date(); d.setHours(0,0,0,0); this.state.soberStart = d.toISOString();
+        }
+        this.save();
+        this.renderAll();
+      }
+
+      renderDiary() {
+        const dates = Object.keys(this.state.diary).sort((a,b)=> b.localeCompare(a));
+        if (dates.length === 0) { this.$diaryList.textContent = 'No entries yet.'; return; }
+        const html = dates.map(d => {
+          const it = this.state.diary[d];
+          return `<div class="log-entry">
+            <div>
+              <div class="drink-name">${d}</div>
+              <div class="muted">Mood: ${it.mood} • Cravings: ${it.craving}</div>
+              ${it.entry ? `<div style="margin-top:6px">${this.escapeHtml(it.entry).replace(/\n/g,'<br/>')}</div>` : ''}
+            </div>
+            <button class="btn mini" onclick="app.loadDiary('${d}')">Edit</button>
+          </div>`;
+        }).join('');
+        this.$diaryList.innerHTML = html;
+      }
+
+      loadDiary(dateStr) {
+        const it = this.state.diary[dateStr];
+        if (!it) return;
+        this.$diaryDate.value = dateStr;
+        this.$mood.value = it.mood;
+        this.$craving.value = it.craving;
+        this.$entry.value = it.entry || '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      renderCalendar() {
+        // Show the last 28 days; color coding days: good (no drinks), bad (drinks), neutral (today)
+        const days = 28;
+        const today = new Date(); today.setHours(0,0,0,0);
+        const blocks = [];
+        for (let i = days-1; i >= 0; i--) {
+          const d = new Date(today); d.setDate(today.getDate() - i);
+          const key = d.toISOString().slice(0,10);
+          const hadDrink = this.state.drinks.some(x => new Date(x.timestamp).toDateString() === d.toDateString());
+          let cls = 'good';
+          if (hadDrink) cls = 'bad';
+          if (d.getTime() === today.getTime()) cls = 'neutral';
+          blocks.push(`<div class="day ${cls}" title="${key}">${d.getDate()}</div>`);
+        }
+        this.$calendar.innerHTML = blocks.join('');
+      }
+
+      // Notifications & reminders
+      async requestNotificationPermission() {
+        if (!('Notification' in window)) { this.toast('Notifications are not supported in this browser.'); return; }
+        try {
+          const perm = await Notification.requestPermission();
+          if (perm === 'granted') {
+            this.toast('Notifications enabled.');
+          } else if (perm === 'denied') {
+            this.toast('Notifications blocked. Enable them in your browser settings.');
+          }
+        } catch(e) { this.toast('Could not request permission.'); }
+      }
+
+      startReminderLoop() {
+        // Check every 30 seconds whether we should fire a reminder for today.
+        this.reminderTimer && clearInterval(this.reminderTimer);
+        this.reminderTimer = setInterval(()=> this.tickReminders(), 30 * 1000);
+        // Run once on load
+        this.tickReminders();
+      }
+
+      tickReminders() {
+        if (!this.settings.enableNotifications) return;
+        const now = new Date();
+        const todayKey = now.toISOString().slice(0,10);
+        const cur = now.toTimeString().slice(0,5); // HH:MM
+
+        const checks = [
+          { key: 'drink', time: this.settings.drinkReminder, title: 'Log any drinks?', body: 'Quick check-in: did you have anything today? Staying mindful helps. 💧' },
+          { key: 'diary', time: this.settings.diaryReminder, title: 'Daily diary', body: 'Two minutes to note mood and cravings. You’re doing great. 🌿' }
+        ];
+
+        checks.forEach(c => {
+          if (!c.time) return;
+          // Trigger if within the minute, and not already shown today
+          const already = this.settings.lastShown?.[c.key] === todayKey;
+          if (already) return;
+          if (cur === c.time) {
+            this.showReminder(c.title, c.body);
+            this.settings.lastShown = this.settings.lastShown || {}; 
+            this.settings.lastShown[c.key] = todayKey;
+            this.saveSettings(false);
+          }
+        });
+      }
+
+      showReminder(title, body) {
+        if ('Notification' in window && Notification.permission === 'granted') {
+          try { new Notification(title, { body }); } catch(e) { this.toast(body); }
+        } else {
+          // Fallback toast if notifications not allowed
+          this.toast(`${title}: ${body}`);
+        }
+      }
+
+      // Settings
+      saveSettings(showMsg = true) {
+        this.settings.enableNotifications = !!this.$enableNotifications.checked;
+        this.settings.drinkReminder = this.$drinkReminder.value || '';
+        this.settings.diaryReminder = this.$diaryReminder.value || '';
+        this.settings.dailySpend = Number(this.$dailySpend.value) || 6;
+        this.settings.streakTarget = Number(this.$streakTargetInput.value) || 30;
+        localStorage.setItem('sobrietySettings', JSON.stringify(this.settings));
+        // Keep legacy keys in sync for backward compatibility
+        localStorage.setItem('dailySpend', String(this.settings.dailySpend));
+        localStorage.setItem('streakTarget', String(this.settings.streakTarget));
+        if (showMsg) this.toast('Settings saved.');
+        this.renderStats();
+      }
+
+      // Helpers
+      save() { localStorage.setItem('sobrietyState', JSON.stringify(this.state)); }
+      flash(el, msg) {
+        const b = document.createElement('span');
+        b.textContent = ' ' + msg; b.style.marginLeft = '8px'; b.style.color = '#10b981'; b.style.fontWeight = '700';
+        const header = el.querySelector('h3');
+        (header || el).appendChild(b);
+        setTimeout(()=> b.remove(), 1200);
+      }
+      toast(msg) {
+        const t = this.$toast; t.textContent = msg; t.style.display = 'block';
+        clearTimeout(this.toastTimer); this.toastTimer = setTimeout(()=> t.style.display = 'none', 3200);
+      }
+      escapeHtml(str) { return str.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+    }
+
+    const app = new SobrietyTracker();
+  </script>
+</body>
+</html>
