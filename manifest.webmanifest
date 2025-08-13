@@ -1,8 +1,7 @@
 {
-  "name": "Sobriety Tracker",
+  "name": "Sobriety & Drinking Tracker",
   "short_name": "Sobriety",
-  "description": "Log drinks, write a daily diary, and track your sober streak.",
-  "start_url": "./?utm_source=pwa",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -10,5 +9,21 @@
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/wide-1.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dashboard on desktop"
+    },
+    {
+      "src": "screenshots/narrow-1.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Diary on mobile"
+    }
   ]
 }
