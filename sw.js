@@ -1,8 +1,12 @@
-const CACHE = 'sobriety-cache-v1';
+// sw.js — cache core assets for offline
+const CACHE = 'sobriety-cache-v2'; // bump this when ASSETS change
+
 const ASSETS = [
   './',
   './index.html',
-  './manifest.webmanifest'
+  './manifest.webmanifest',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
 self.addEventListener('install', (e) => {
@@ -21,6 +25,10 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   e.respondWith(
-    caches.match(e.request).then((r) => r || fetch(e.request).catch(() => caches.match('./index.html')))
+    caches.match(e.request).then((cached) => cached || fetch(e.request).catch(() => {
+      // Fallback to cached index for navigations when offline
+      if (e.request.mode === 'navigate') return caches.match('./index.html');
+      return cached;
+    }))
   );
 });

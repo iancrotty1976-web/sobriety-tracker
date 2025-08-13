@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Drinking & Sobriety Tracker</title>
+  <meta name="theme-color" content="#4facfe" />
+  <link rel="manifest" href="manifest.webmanifest" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -237,6 +239,7 @@
           </div>
         </div>
         <div style="display:flex; gap:10px; margin-top: 12px;">
+          <button id="installBtn" class="btn" type="button" style="display:none">Install App</button>
           <button id="saveSettings" class="btn secondary" type="button">Save Settings</button>
           <button id="testNotification" class="btn" type="button">Test Notification</button>
         </div>
@@ -327,13 +330,11 @@
       }
 
       initDefaults() {
-        // default times
         const now = new Date();
         this.$drinkTime.value = now.toISOString().slice(0, 16);
         this.$diaryDate.value = now.toISOString().slice(0,10);
 
         if (!this.state.soberStart) {
-          // If there are past drinks, start soberStart after the last drink; otherwise today 00:00
           const lastDrink = this.state.drinks[0];
           const start = lastDrink ? new Date(lastDrink.timestamp) : new Date();
           if (!lastDrink) start.setHours(0,0,0,0);
@@ -341,7 +342,6 @@
           this.save();
         }
 
-        // Settings UI values
         this.$enableNotifications.checked = !!this.settings.enableNotifications;
         this.$drinkReminder.value = this.settings.drinkReminder || '';
         this.$diaryReminder.value = this.settings.diaryReminder || '';
@@ -364,27 +364,24 @@
         this.$testNotification.addEventListener('click', ()=> this.showReminder('Test Notification', 'This is how a reminder will look. You got this! 💚'));
       }
 
-      // Quotes
       showRandomQuote() {
         const q = this.quotes[Math.floor(Math.random()*this.quotes.length)];
         this.$quoteText.textContent = `“${q.t}”`;
         this.$quoteSource.textContent = q.s ? `— ${q.s}` : '';
       }
 
-      // Drinks
       addDrink() {
         const type = document.getElementById('drinkType').value;
         const name = document.getElementById('drinkName').value || this.defaultName(type);
         const volume = parseFloat(document.getElementById('volume').value);
-        const abv = parseFloat(document.getElementById('abv').value);
+        the abv = parseFloat(document.getElementById('abv').value);
         const time = new Date(this.$drinkTime.value);
         if (!type || isNaN(volume) || isNaN(abv) || !time) return;
 
-        const units = ((volume * abv) / 1000); // UK units
+        const units = ((volume * abv) / 1000);
         const item = { id: Date.now(), type, name, volume, abv, units: Number(units.toFixed(2)), timestamp: time.toISOString() };
         this.state.drinks.unshift(item);
 
-        // Reset sobriety start to the moment after this drink
         const nextMinute = new Date(time); nextMinute.setMinutes(time.getMinutes()+1); nextMinute.setSeconds(0,0);
         this.state.soberStart = nextMinute.toISOString();
 
@@ -396,8 +393,7 @@
 
       undoLastDrink() {
         if (this.state.drinks.length === 0) return;
-        const removed = this.state.drinks.shift();
-        // If we removed the most recent drink, update soberStart to the next most recent
+        this.state.drinks.shift();
         const last = this.state.drinks[0];
         if (last) {
           const t = new Date(last.timestamp);
@@ -415,9 +411,8 @@
         return map[type] || 'Drink';
       }
 
-      // Diary
       saveDiaryEntry() {
-        const date = this.$diaryDate.value; // YYYY-MM-DD
+        const date = this.$diaryDate.value;
         if (!date) return;
         this.state.diary[date] = {
           mood: this.$mood.value,
@@ -442,7 +437,6 @@
         this.$entry.focus();
       }
 
-      // Computations
       getDaysSober() {
         const start = new Date(this.state.soberStart);
         const now = new Date();
@@ -463,7 +457,6 @@
         return this.getDaysSober() * daily;
       }
 
-      // Rendering
       renderAll() {
         this.renderStats();
         this.renderDrinks();
@@ -482,7 +475,7 @@
         this.$drinksThisWeek.textContent = drinksWeek;
         this.$moneySaved.textContent = `£${money.toFixed(0)}`;
 
-        const target = Number(this.settings.streakTarget) || 30; // milestone
+        const target = Number(this.settings.streakTarget) || 30;
         const pct = Math.min(100, Math.round((streak / target) * 100));
         this.$streakLabel.textContent = `${streak} / ${target} days`;
         this.$streakBar.style.width = pct + '%';
@@ -505,7 +498,6 @@
 
       deleteDrink(id) {
         this.state.drinks = this.state.drinks.filter(d => d.id !== id);
-        // Recompute soberStart from the most recent remaining drink
         const last = this.state.drinks[0];
         if (last) {
           const t = new Date(last.timestamp); t.setMinutes(t.getMinutes()+1); t.setSeconds(0,0);
@@ -545,7 +537,6 @@
       }
 
       renderCalendar() {
-        // Show the last 28 days; color coding days: good (no drinks), bad (drinks), neutral (today)
         const days = 28;
         const today = new Date(); today.setHours(0,0,0,0);
         const blocks = [];
@@ -561,7 +552,6 @@
         this.$calendar.innerHTML = blocks.join('');
       }
 
-      // Notifications & reminders
       async requestNotificationPermission() {
         if (!('Notification' in window)) { this.toast('Notifications are not supported in this browser.'); return; }
         try {
@@ -575,10 +565,8 @@
       }
 
       startReminderLoop() {
-        // Check every 30 seconds whether we should fire a reminder for today.
         this.reminderTimer && clearInterval(this.reminderTimer);
         this.reminderTimer = setInterval(()=> this.tickReminders(), 30 * 1000);
-        // Run once on load
         this.tickReminders();
       }
 
@@ -586,7 +574,7 @@
         if (!this.settings.enableNotifications) return;
         const now = new Date();
         const todayKey = now.toISOString().slice(0,10);
-        const cur = now.toTimeString().slice(0,5); // HH:MM
+        const cur = now.toTimeString().slice(0,5);
 
         const checks = [
           { key: 'drink', time: this.settings.drinkReminder, title: 'Log any drinks?', body: 'Quick check-in: did you have anything today? Staying mindful helps. 💧' },
@@ -595,7 +583,6 @@
 
         checks.forEach(c => {
           if (!c.time) return;
-          // Trigger if within the minute, and not already shown today
           const already = this.settings.lastShown?.[c.key] === todayKey;
           if (already) return;
           if (cur === c.time) {
@@ -611,12 +598,10 @@
         if ('Notification' in window && Notification.permission === 'granted') {
           try { new Notification(title, { body }); } catch(e) { this.toast(body); }
         } else {
-          // Fallback toast if notifications not allowed
           this.toast(`${title}: ${body}`);
         }
       }
 
-      // Settings
       saveSettings(showMsg = true) {
         this.settings.enableNotifications = !!this.$enableNotifications.checked;
         this.settings.drinkReminder = this.$drinkReminder.value || '';
@@ -624,14 +609,12 @@
         this.settings.dailySpend = Number(this.$dailySpend.value) || 6;
         this.settings.streakTarget = Number(this.$streakTargetInput.value) || 30;
         localStorage.setItem('sobrietySettings', JSON.stringify(this.settings));
-        // Keep legacy keys in sync for backward compatibility
         localStorage.setItem('dailySpend', String(this.settings.dailySpend));
         localStorage.setItem('streakTarget', String(this.settings.streakTarget));
         if (showMsg) this.toast('Settings saved.');
         this.renderStats();
       }
 
-      // Helpers
       save() { localStorage.setItem('sobrietyState', JSON.stringify(this.state)); }
       flash(el, msg) {
         const b = document.createElement('span');
@@ -648,6 +631,43 @@
     }
 
     const app = new SobrietyTracker();
+  </script>
+
+  <!-- PWA install button + service worker registration -->
+  <script>
+    (function () {
+      const installBtn = document.getElementById('installBtn');
+      let deferredPrompt = null;
+
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      if (isStandalone && installBtn) installBtn.style.display = 'none';
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (installBtn) installBtn.style.display = 'inline-block';
+      });
+
+      window.addEventListener('appinstalled', () => {
+        deferredPrompt = null;
+        if (installBtn) installBtn.style.display = 'none';
+        try { app.toast('App installed!'); } catch (_) {}
+      });
+
+      installBtn && installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        try { await deferredPrompt.userChoice; } catch (_) {}
+        deferredPrompt = null;
+        installBtn.style.display = 'none';
+      });
+
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').catch(() => {});
+        });
+      }
+    })();
   </script>
 </body>
 </html>

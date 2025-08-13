@@ -1,7 +1,8 @@
 {
-  "name": "Sobriety & Drinking Tracker",
+  "name": "Sobriety Tracker",
   "short_name": "Sobriety",
-  "start_url": "./",
+  "description": "Log drinks, write a daily diary, and track your sober streak.",
+  "start_url": "./?utm_source=pwa",
   "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
