@@ -239,7 +239,7 @@
           </div>
         </div>
         <div style="display:flex; gap:10px; margin-top: 12px;">
-          <button id="installBtn" class="btn" type="button" style="display:none">Install App</button>
+          <button id="installBtn" class="btn" type="button">Install App</button>
           <button id="saveSettings" class="btn secondary" type="button">Save Settings</button>
           <button id="testNotification" class="btn" type="button">Test Notification</button>
         </div>
@@ -637,7 +637,7 @@
   <script>
     (function () {
       const installBtn = document.getElementById('installBtn');
-      let deferredPrompt = null;
+      let deferredPrompt = null; if (installBtn) installBtn.style.display = 'inline-block';
 
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
       if (isStandalone && installBtn) installBtn.style.display = 'none';
@@ -655,7 +655,7 @@
       });
 
       installBtn && installBtn.addEventListener('click', async () => {
-        if (!deferredPrompt) return;
+        if (!deferredPrompt) { try { app.toast('In Chrome: Menu (⋮) > Install app'); } catch(_) {} return; }
         deferredPrompt.prompt();
         try { await deferredPrompt.userChoice; } catch (_) {}
         deferredPrompt = null;
