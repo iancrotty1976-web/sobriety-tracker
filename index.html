@@ -374,7 +374,7 @@
         const type = document.getElementById('drinkType').value;
         const name = document.getElementById('drinkName').value || this.defaultName(type);
         const volume = parseFloat(document.getElementById('volume').value);
-        the abv = parseFloat(document.getElementById('abv').value);
+        const abv = parseFloat(document.getElementById('abv').value);
         const time = new Date(this.$drinkTime.value);
         if (!type || isNaN(volume) || isNaN(abv) || !time) return;
 
