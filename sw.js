@@ -1,16 +1,35 @@
-const CACHE = 'sobriety-cache-test';
+const CACHE = 'sobriety-cache-v1';
+
+const ASSETS = [
+  './',
+  './index.html',
+  './manifest.webmanifest',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
+];
 
 self.addEventListener('install', event => {
-  console.log('[SW] Install event');
-  event.waitUntil(self.skipWaiting());
+  event.waitUntil(
+    caches.open(CACHE).then(cache =>
+      cache.addAll(ASSETS).catch(err => {
+        console.error('[SW] Cache addAll failed', err);
+      })
+    )
+  );
 });
 
 self.addEventListener('activate', event => {
-  console.log('[SW] Activate event');
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    )
+  );
 });
 
 self.addEventListener('fetch', event => {
-  // For now, just let requests go to network
-  event.respondWith(fetch(event.request));
+  event.respondWith(
+    caches.match(event.request).then(cached =>
+      cached || fetch(event.request)
+    )
+  );
 });
