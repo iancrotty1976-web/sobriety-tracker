@@ -2,7 +2,7 @@
   "name": "Sobriety & Drinking Tracker",
   "short_name": "Sobriety",
   "start_url": "/sobriety-tracker/",
-"scope": "/sobriety-tracker/",
+  "scope": "/sobriety-tracker/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4facfe",
