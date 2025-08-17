@@ -1,4 +1,4 @@
-const CACHE = 'sobriety-cache-v5'; // bump version
+const CACHE = 'sobriety-cache-v6'; // bump version
 
 const ASSETS = [
   './',
