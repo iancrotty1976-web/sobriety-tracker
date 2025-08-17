@@ -1,4 +1,4 @@
-const CACHE = 'sobriety-cache-v6'; // bump version
+const CACHE = 'sobriety-cache-v6';
 
 const ASSETS = [
   './',
@@ -10,4 +10,27 @@ const ASSETS = [
   './screenshots/narrow-1.png'
 ];
 
-// install/activate/fetch handlers stay the same
+// Install
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE).then(cache => cache.addAll(ASSETS))
+  );
+});
+
+// Activate
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    )
+  );
+});
+
+// Fetch
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(cached =>
+      cached || fetch(event.request)
+    )
+  );
+});
