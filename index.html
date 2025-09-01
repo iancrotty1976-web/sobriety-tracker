@@ -23,22 +23,18 @@
     .stat .num { font-size: 22px; font-weight: 700; color: #0f62fe; }
     .row { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
     label { font-size: 13px; color: #374151; }
-    
-    /* Base input styles */
     textarea, input, select {
       width: 100%;
       padding: 10px;
       border-radius: 8px;
       border: 1px solid #d1d5db;
-      background: #fff;
+      background: #ffffff;
+      color: #000000;
       font-size: 16px;
       line-height: 1.4;
+      -webkit-text-fill-color: #000000 !important;
     }
-
-    input::placeholder, textarea::placeholder { 
-      color: #9ca3af !important; 
-    }
-    
+    input::placeholder, textarea::placeholder { color: #9ca3af; }
     textarea:focus, input:focus, select:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px #6366f11f; }
     .btn { padding: 10px 14px; background: #4facfe; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
     .btn:hover { background: #3a8edb; }
@@ -58,53 +54,30 @@
   <div class="container">
     <div class="cards">
 
+      <!-- Progress -->
       <div class="card">
         <h3>Progress</h3>
         <div class="stats">
-          <div class="stat">
-            <div class="num" id="daysSober">0</div>
-            <div class="muted">Days Sober</div>
-          </div>
-          <div class="stat">
-            <div class="num" id="currentStreak">0</div>
-            <div class="muted">Current Streak</div>
-          </div>
-          <div class="stat">
-            <div class="num" id="drinksThisWeek">0</div>
-            <div class="muted">Drinks This Week</div>
-          </div>
-          <div class="stat">
-            <div class="num" id="moneySaved">£0</div>
-            <div class="muted">Estimated Money Saved</div>
-          </div>
+          <div class="stat"><div class="num" id="daysSober">0</div><div class="muted">Days Sober</div></div>
+          <div class="stat"><div class="num" id="currentStreak">0</div><div class="muted">Current Streak</div></div>
+          <div class="stat"><div class="num" id="longestStreak">0</div><div class="muted">Longest Streak</div></div>
+          <div class="stat"><div class="num" id="drinksThisWeek">0</div><div class="muted">Drinks This Week</div></div>
+          <div class="stat"><div class="num" id="moneySaved">£0</div><div class="muted">Estimated Money Saved</div></div>
         </div>
       </div>
 
+      <!-- Add a Drink -->
       <div class="card">
         <h3>Add a Drink</h3>
         <div class="row">
-          <div>
-            <label>Drink Type</label>
-            <select id="drinkType">
-              <option value="Beer">Beer</option>
-              <option value="Wine">Wine</option>
-              <option value="Spirit">Spirit</option>
-            </select>
+          <div><label>Drink Type</label>
+            <select id="drinkType"><option value="Beer">Beer</option><option value="Wine">Wine</option><option value="Spirit">Spirit</option></select>
           </div>
-          <div>
-            <label>Name (optional)</label>
-            <input id="drinkName" type="text" placeholder="e.g., IPA, Red Wine" />
-          </div>
+          <div><label>Name (optional)</label><input id="drinkName" type="text" placeholder="e.g., IPA, Red Wine" /></div>
         </div>
         <div class="row">
-          <div>
-            <label>Volume (ml)</label>
-            <input id="drinkMl" type="number" inputmode="numeric" placeholder="330" />
-          </div>
-          <div>
-            <label>Alcohol % (ABV)</label>
-            <input id="drinkAbv" type="number" step="0.1" inputmode="decimal" placeholder="5.0" />
-          </div>
+          <div><label>Volume (ml)</label><input id="drinkMl" type="number" inputmode="numeric" placeholder="330" /></div>
+          <div><label>Alcohol % (ABV)</label><input id="drinkAbv" type="number" step="0.1" inputmode="decimal" placeholder="5.0" /></div>
         </div>
         <div class="flex" style="margin-top:10px;">
           <button id="addDrink" class="btn">Add Drink</button>
@@ -112,22 +85,14 @@
         </div>
       </div>
 
+      <!-- Daily Diary -->
       <div class="card">
         <h3>Daily Diary</h3>
         <div class="row">
-          <div>
-            <label>Date</label>
-            <input id="diaryDate" type="date" />
-          </div>
-          <div>
-            <label>Mood</label>
-            <select id="diaryMood">
-              <option>Great</option>
-              <option>Good</option>
-              <option>Okay</option>
-              <option>Meh</option>
-              <option>Struggling</option>
-            </select>
+          <div><label>Date</label><input id="diaryDate" type="date" /></div>
+          <div><label>Mood</label>
+            <select id="diaryMood"><option>Great</option><option>Good</option><option>Okay</option>
+              <option>Meh</option><option>Struggling</option></select>
           </div>
         </div>
         <label style="margin-top:8px;">Notes</label>
@@ -138,284 +103,98 @@
         </div>
       </div>
 
+      <!-- Daily Motivation -->
       <div class="card">
         <h3>Daily Motivation</h3>
         <div class="quote" id="quoteBox">Loading your daily quote…</div>
         <div class="muted" id="quoteAttribution"></div>
       </div>
 
+      <!-- Settings -->
       <div class="card">
         <h3>Reminders & Settings</h3>
         <button id="installBtn" class="btn" type="button" style="display:none;">📲 Install App</button>
         <button id="resetBtn" class="btn" type="button" style="margin-top:10px; background:#ef4444;">🔄 Reset Progress</button>
         <div style="height:8px;"></div>
         <div class="flex">
-          <div class="switch">
-            <input type="checkbox" id="reminderEnabled" />
-            <label for="reminderEnabled">Daily reminder</label>
-          </div>
-          <input type="time" id="reminderTime" />
-          <button id="saveReminder" class="btn">Save</button>
+          <div class="switch"><input type="checkbox" id="reminderEnabled" /><label for="reminderEnabled">Daily reminder</label></div>
+          <input type="time" id="reminderTime" /><button id="saveReminder" class="btn">Save</button>
         </div>
         <div class="muted" id="reminderStatus" style="margin-top:6px;"></div>
-        <p class="muted" style="margin-top:10px;">iPhone users: open this site in Safari, tap Share, then "Add to Home Screen".</p>
+        <p class="muted" style="margin-top:10px;">iPhone users: open in Safari → Share → "Add to Home Screen".</p>
       </div>
-
     </div>
   </div>
 
   <script>
-    // ---- Utilities & Storage Helpers
-    const ls = {
-      get: (k, d=null) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
-      set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
-    };
+    const ls = { get:(k,d=null)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}}, set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)) };
 
-    // ---- Progress / Drinks / Money
-    let drinksThisWeek = ls.get('drinksThisWeek', 0);
-    let firstSoberDate = ls.get('firstSoberDate', null);
-    let streak = ls.get('streak', 0);
+    let drinksThisWeek = ls.get('drinksThisWeek',0);
+    let firstSoberDate = ls.get('firstSoberDate',null);
+    let streak = ls.get('streak',0);
+    let longestStreak = ls.get('longestStreak',0);
     const drinkPrice = 5;
 
-    function renderStats() {
-      document.getElementById('drinksThisWeek').textContent = drinksThisWeek;
-      document.getElementById('currentStreak').textContent = streak;
-      const daysSober = calcDaysSober();
-      document.getElementById('daysSober').textContent = daysSober;
-      const moneySaved = (streak > 0 ? streak : 0) * drinkPrice;
-      document.getElementById('moneySaved').textContent = '£' + moneySaved;
+    function renderStats(){
+      document.getElementById('drinksThisWeek').textContent=drinksThisWeek;
+      document.getElementById('currentStreak').textContent=streak;
+      document.getElementById('daysSober').textContent=calcDaysSober();
+      document.getElementById('moneySaved').textContent='£'+((streak>0?streak:0)*drinkPrice);
+      document.getElementById('longestStreak').textContent=longestStreak;
     }
+    function calcDaysSober(){ if(!firstSoberDate)return 0; const s=new Date(firstSoberDate),n=new Date(); return Math.max(0,Math.floor((n-s)/(1000*60*60*24))); }
+    function resetSoberIfNeeded(){ const t=new Date(),tm=new Date(t.getFullYear(),t.getMonth(),t.getDate()+1); firstSoberDate=tm.toISOString(); streak=0; ls.set('firstSoberDate',firstSoberDate); ls.set('streak',streak); }
 
-    function calcDaysSober() {
-      if (!firstSoberDate) return 0;
-      const start = new Date(firstSoberDate);
-      const now = new Date();
-      const diff = Math.floor((now - start) / (1000*60*60*24));
-      return Math.max(0, diff);
-    }
+    document.getElementById('addDrink').addEventListener('click',()=>{ drinksThisWeek++; ls.set('drinksThisWeek',drinksThisWeek); resetSoberIfNeeded(); renderStats(); toast('Logged a drink. New day, new start 💪'); });
 
-    function resetSoberIfNeeded() {
-      const today = new Date();
-      const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
-      firstSoberDate = tomorrow.toISOString();
-      streak = 0;
-      ls.set('firstSoberDate', firstSoberDate);
-      ls.set('streak', streak);
-    }
-
-    document.getElementById('addDrink').addEventListener('click', () => {
-      drinksThisWeek += 1;
-      ls.set('drinksThisWeek', drinksThisWeek);
-      resetSoberIfNeeded();
-      renderStats();
-      toast('Logged a drink. New day, new start 💪');
-    });
-
-    // Reset Progress Button
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      if (confirm("Are you sure you want to reset all progress?")) {
-        localStorage.clear();
-        drinksThisWeek = 0;
-        streak = 0;
-        firstSoberDate = null;
-        renderStats();
-        toast("Progress reset. Fresh start 🌱");
+    // ✅ Reset button logic preserving diary + tracking longest streak
+    document.getElementById('resetBtn').addEventListener('click',()=>{
+      if(confirm("Reset stats? (Diary entries will be kept)")){
+        if(streak>longestStreak){ longestStreak=streak; ls.set('longestStreak',longestStreak); }
+        drinksThisWeek=0; streak=0; firstSoberDate=null;
+        ls.set('drinksThisWeek',0); ls.set('streak',0); ls.set('firstSoberDate',null);
+        renderStats(); toast(`Progress reset. Longest streak: ${longestStreak} days 🌟`);
       }
     });
 
-    // Increment streak daily
-    (function updateStreakDaily() {
-      const key = 'lastStreakDay';
-      const last = ls.get(key, null);
-      const today = new Date().toDateString();
-      if (last !== today) {
-        streak = (streak || 0) + 1;
-        if (!firstSoberDate) firstSoberDate = new Date().toISOString();
-        ls.set('firstSoberDate', firstSoberDate);
-        ls.set('streak', streak);
-        ls.set(key, today);
-      }
-    })();
+    // Daily streak updater
+    (function daily(){const k='lastStreakDay',last=ls.get(k,null),today=new Date().toDateString();if(last!==today){streak=(streak||0)+1;if(!firstSoberDate)firstSoberDate=new Date().toISOString();ls.set('firstSoberDate',firstSoberDate);ls.set('streak',streak);ls.set(k,today);} })();
 
     renderStats();
 
-    // ---- Diary
-    const diaryDateEl = document.getElementById('diaryDate');
-    const diaryMoodEl = document.getElementById('diaryMood');
-    const diaryEl = document.getElementById('diary');
-    const diaryMsgEl = document.getElementById('diarySavedMsg');
+    // Diary
+    const diaryDateEl=document.getElementById('diaryDate'), diaryMoodEl=document.getElementById('diaryMood'), diaryEl=document.getElementById('diary'), diaryMsgEl=document.getElementById('diarySavedMsg');
+    diaryDateEl.valueAsDate=new Date();
+    document.getElementById('saveDiary').addEventListener('click',()=>{ const k='diary:'+ (diaryDateEl.value||new Date().toISOString().slice(0,10)); ls.set(k,{date:diaryDateEl.value,mood:diaryMoodEl.value,note:diaryEl.value,savedAt:new Date().toISOString()}); diaryMsgEl.textContent='Saved ✔'; setTimeout(()=>diaryMsgEl.textContent='',2000); });
 
-    diaryDateEl.valueAsDate = new Date();
+    // Quotes
+    const QUOTES=[{q:"One day at a time.",a:"AA Slogan"},{q:"You are stronger than your strongest excuse.",a:"Unknown"},{q:"Small steps every day lead to big results.",a:"Unknown"},{q:"Progress, not perfection.",a:"AA Slogan"},{q:"The comeback is always stronger than the setback.",a:"Unknown"},{q:"Cravings pass. Your reasons last.",a:"Unknown"},{q:"What you do today can improve all your tomorrows.",a:"Ralph Marston"}];
+    const qi=(new Date().getFullYear()*1000+(new Date().getMonth()+1)*50+new Date().getDate())%QUOTES.length;
+    document.getElementById('quoteBox').textContent='"'+QUOTES[qi].q+'"'; document.getElementById('quoteAttribution').textContent='— '+QUOTES[qi].a;
 
-    document.getElementById('saveDiary').addEventListener('click', () => {
-      const key = 'diary:' + (diaryDateEl.value || new Date().toISOString().slice(0,10));
-      const entry = { date: diaryDateEl.value, mood: diaryMoodEl.value, note: diaryEl.value, savedAt: new Date().toISOString() };
-      ls.set(key, entry);
-      diaryMsgEl.textContent = 'Saved ✔';
-      setTimeout(() => diaryMsgEl.textContent = '', 2000);
-    });
+    // Notifications
+    const reminderEnabledEl=document.getElementById('reminderEnabled'),reminderTimeEl=document.getElementById('reminderTime'),reminderStatusEl=document.getElementById('reminderStatus');
+    reminderEnabledEl.checked=!!ls.get('reminderEnabled',false); reminderTimeEl.value=ls.get('reminderTime','20:00');
+    function reqPerm(){if(!('Notification'in window))return Promise.resolve('unsupported');if(Notification.permission==='granted')return Promise.resolve('granted');if(Notification.permission==='denied')return Promise.resolve('denied');return Notification.requestPermission();}
+    function tick(){clearInterval(window.__t);if(!reminderEnabledEl.checked){reminderStatusEl.textContent='Daily reminder is off.';return;} const[hh,mm]=(reminderTimeEl.value||'20:00').split(':').map(n=>parseInt(n));reminderStatusEl.textContent=`Reminder set for ${hh.toString().padStart(2,'0')}:${mm.toString().padStart(2,'0')} daily.`;window.__t=setInterval(()=>{const n=new Date();if(n.getHours()===hh&&n.getMinutes()===mm&&n.getSeconds()<5){const k='reminderLast:'+n.toDateString(); if(ls.get(k,null))return; ls.set(k,true); fireRem();}},1000);}
+    async function fireRem(){const b='How are you feeling? Log a quick diary entry or update drinks.'; if('Notification'in window&&Notification.permission==='granted'){try{new Notification('Daily check-in',{body:b,icon:'icons/icon-192.png'});}catch{alert(b);}}else{alert(b);}}
+    document.getElementById('saveReminder').addEventListener('click',async()=>{ls.set('reminderEnabled',reminderEnabledEl.checked); ls.set('reminderTime',reminderTimeEl.value||'20:00'); if(reminderEnabledEl.checked){const p=await reqPerm(); if(p!=='granted'){reminderStatusEl.textContent='Notifications not allowed - using alerts.'}} tick(); toast('Reminder saved.');});
+    tick();
 
-    // ---- Daily Motivation
-    const QUOTES = [
-      { q: "One day at a time.", a: "AA Slogan" },
-      { q: "You are stronger than your strongest excuse.", a: "Unknown" },
-      { q: "Small steps every day lead to big results.", a: "Unknown" },
-      { q: "Progress, not perfection.", a: "AA Slogan" },
-      { q: "The comeback is always stronger than the setback.", a: "Unknown" },
-      { q: "Cravings pass. Your reasons last.", a: "Unknown" },
-      { q: "What you do today can improve all your tomorrows.", a: "Ralph Marston" }
-    ];
-    function dailyIndex(n) {
-      const d = new Date();
-      const seed = d.getFullYear()*1000 + (d.getMonth()+1)*50 + d.getDate();
-      return seed % n;
-    }
-    const qi = dailyIndex(QUOTES.length);
-    document.getElementById('quoteBox').textContent = '"' + QUOTES[qi].q + '"';
-    document.getElementById('quoteAttribution').textContent = '— ' + QUOTES[qi].a;
+    // Toast
+    function toast(m){if(!window.__tEl){const e=document.createElement('div');e.style='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:999px;font-size:14px;z-index:9999;box-shadow:0 6px 20px rgba(0,0,0,0.25);opacity:0;transition:opacity .2s';document.body.appendChild(e);window.__tEl=e;} window.__tEl.textContent=m; window.__tEl.style.opacity='1'; setTimeout(()=>window.__tEl&&(window.__tEl.style.opacity='0'),1800);}
+    
+    // PWA
+    if('serviceWorker'in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js');});}
+    let deferredPrompt;const installBtn=document.getElementById('installBtn');
+    window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBtn.style.display='inline-block';});
+    installBtn.addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();try{await deferredPrompt.userChoice;}catch{}deferredPrompt=null;installBtn.style.display='none';}else alert("Tip: choose 'Install app' from your menu");});
+    window.addEventListener('appinstalled',()=>{installBtn.style.display='none';toast('App installed 🎉');});
 
-    // ---- Reminders / Notifications
-    const reminderEnabledEl = document.getElementById('reminderEnabled');
-    const reminderTimeEl = document.getElementById('reminderTime');
-    const reminderStatusEl = document.getElementById('reminderStatus');
-
-    const savedEnabled = ls.get('reminderEnabled', false);
-    const savedTime = ls.get('reminderTime', '20:00');
-    reminderEnabledEl.checked = !!savedEnabled;
-    reminderTimeEl.value = savedTime;
-
-    function requestPermissionIfNeeded() {
-      if (!('Notification' in window)) return Promise.resolve('unsupported');
-      if (Notification.permission === 'granted') return Promise.resolve('granted');
-      if (Notification.permission === 'denied') return Promise.resolve('denied');
-      return Notification.requestPermission();
-    }
-
-    function scheduleTick() {
-      clearInterval(window.__reminderTimer);
-      if (!reminderEnabledEl.checked) {
-        reminderStatusEl.textContent = 'Daily reminder is off.';
-        return;
-      }
-      const [hh, mm] = (reminderTimeEl.value || '20:00').split(':').map(n => parseInt(n, 10));
-      reminderStatusEl.textContent = `Reminder set for ${hh.toString().padStart(2,'0')}:${mm.toString().padStart(2,'0')} daily.`;
-      window.__reminderTimer = setInterval(() => {
-        const now = new Date();
-        if (now.getHours() === hh && now.getMinutes() === mm && now.getSeconds() < 5) {
-          const key = 'reminderLast:' + now.toDateString();
-          if (ls.get(key, null)) return;
-          ls.set(key, true);
-          fireReminder();
-        }
-      }, 1000);
-    }
-
-    async function fireReminder() {
-      const title = 'Daily check-in';
-      const body = 'How are you feeling? Log a quick diary entry or update drinks.';
-      if ('Notification' in window && Notification.permission === 'granted') {
-        try { new Notification(title, { body, icon: 'icons/icon-192.png' }); }
-        catch { alert(body); }
-      } else {
-        alert(body);
-      }
-    }
-
-    document.getElementById('saveReminder').addEventListener('click', async () => {
-      ls.set('reminderEnabled', reminderEnabledEl.checked);
-      ls.set('reminderTime', reminderTimeEl.value || '20:00');
-      if (reminderEnabledEl.checked) {
-        const perm = await requestPermissionIfNeeded();
-        if (perm !== 'granted') {
-          reminderStatusEl.textContent = 'Notifications not allowed by the browser. We will use in-app alerts.';
-        }
-      }
-      scheduleTick();
-      toast('Reminder settings saved.');
-    });
-
-    scheduleTick();
-
-    // ---- Toast helper
-    function toast(msg) {
-      try {
-        if (!window.__toastEl) {
-          const el = document.createElement('div');
-          el.style.position = 'fixed';
-          el.style.left = '50%';
-          el.style.bottom = '18px';
-          el.style.transform = 'translateX(-50%)';
-          el.style.background = '#111827';
-          el.style.color = 'white';
-          el.style.padding = '10px 14px';
-          el.style.borderRadius = '999px';
-          el.style.fontSize = '14px';
-          el.style.zIndex = '9999';
-          el.style.boxShadow = '0 6px 20px rgba(0,0,0,0.25)';
-          el.style.opacity = '0';
-          el.style.transition = 'opacity .2s ease';
-          document.body.appendChild(el);
-          window.__toastEl = el;
-        }
-        window.__toastEl.textContent = msg;
-        window.__toastEl.style.opacity = '1';
-        setTimeout(() => window.__toastEl && (window.__toastEl.style.opacity = '0'), 1800);
-      } catch {}
-    }
-
-    // ---- PWA: Service Worker registration
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js', { scope: './' })
-          .then(() => console.log('SW registered'))
-          .catch(err => console.warn('SW registration failed', err));
-      });
-    }
-
-    // ---- PWA Install Button logic
-    let deferredPrompt;
-    const installBtn = document.getElementById('installBtn');
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      installBtn.style.display = 'inline-block';
-    });
-
-    installBtn.addEventListener('click', async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        try {
-          const { outcome } = await deferredPrompt.userChoice;
-          console.log('Install outcome:', outcome);
-        } catch {}
-        deferredPrompt = null;
-        installBtn.style.display = 'none';
-      } else {
-        alert("Tip: In your browser menu choose 'Install app' or 'Add to Home screen'");
-      }
-    });
-
-    window.addEventListener('appinstalled', () => {
-      console.log('PWA installed');
-      installBtn.style.display = 'none';
-      toast('App installed 🎉');
-    });
-
-    // 🚀 FORCE INPUT VISIBILITY ON MOBILE (runtime fix)
-    function forceInputVisibility() {
-      const els = document.querySelectorAll('input, textarea, select');
-      els.forEach(el => {
-        el.style.backgroundColor = '#ffffff';
-        el.style.color = '#000000';
-        el.style.caretColor = '#000000';
-        el.style.setProperty('-webkit-text-fill-color', '#000000', 'important');
-      });
-    }
-
-    // Run visibility fix as soon as possible
-    document.addEventListener('DOMContentLoaded', forceInputVisibility);
-    window.addEventListener('load', () => setTimeout(forceInputVisibility, 100));
+    // Runtime visibility fix for mobile inputs
+    function forceInputVisibility(){document.querySelectorAll('input,textarea,select').forEach(el=>{el.style.background='#fff';el.style.color='#000';el.style.caretColor='#000';el.style.setProperty('-webkit-text-fill-color','#000','important');});}
+    document.addEventListener('DOMContentLoaded',forceInputVisibility);
+    window.addEventListener('load',()=>setTimeout(forceInputVisibility,100));
   </script>
 </body>
 </html>
