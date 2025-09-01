@@ -29,6 +29,7 @@
     textarea,input,select{width:100%;padding:10px;border-radius:8px;border:1px solid #d1d5db;background:#fff;
       color:#000;font-size:16px;line-height:1.4;-webkit-text-fill-color:#000 !important;}
     .quote{background:linear-gradient(135deg,#eef2ff,#ecfeff);border:1px solid #dbeafe;border-radius:10px;padding:12px;}
+    .flex { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
   </style>
 </head>
 <body>
@@ -57,7 +58,7 @@
         <label>Date</label><input id="diaryDate" type="date"/>
         <label>Mood</label>
         <select id="diaryMood"><option>Great</option><option>Good</option><option>Okay</option><option>Meh</option><option>Struggling</option></select>
-        <label>Notes</label><textarea id="diary" rows="3"></textarea>
+        <label>Notes</label><textarea id="diary" rows="3" placeholder="How are you feeling today? Any triggers or wins?"></textarea>
         <button id="saveDiary" class="btn btn-primary" style="margin-top:8px;">Save Entry</button>
         <div class="muted" id="diarySavedMsg"></div>
       </div>
@@ -82,18 +83,27 @@
         <div class="muted" id="quoteAttribution"></div>
       </div>
 
-      <!-- Settings -->
+      <!-- Reminders & Settings -->
       <div class="card">
-        <h3>Settings</h3>
+        <h3>Reminders & Settings</h3>
+        <div class="flex" style="margin-bottom:8px;">
+          <div class="flex"><input type="checkbox" id="reminderEnabled" /><label for="reminderEnabled">Daily reminder</label></div>
+          <input type="time" id="reminderTime" />
+          <button id="saveReminder" class="btn btn-primary">Save</button>
+        </div>
+        <div class="muted" id="reminderStatus"></div>
+        <div style="height:10px;"></div>
         <button id="installBtn" class="btn btn-primary" type="button" style="display:none;">📲 Install App</button>
-        <button id="resetBtn" class="btn btn-danger" style="margin-top:8px;">Reset Progress</button>
+        <button id="resetBtn" class="btn btn-danger" style="margin-left:10px;">Reset Progress</button>
+        <p class="muted" style="margin-top:8px;">Note: Browser notifications are best-effort. For guaranteed background alerts, we can add Web Push later.</p>
       </div>
+
     </div>
   </div>
 
   <!-- Setup Modal -->
   <div id="setupModal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#000000dd;display:none;align-items:center;justify-content:center;">
-    <div style="background:white;padding:20px;border-radius:12px;max-width:400px;width:90%;">
+    <div style="background:white;padding:20px;border-radius:12px;max-width:420px;width:90%;">
       <h3>Welcome 🎉</h3>
       <p>Let’s personalise your journey.</p>
       <label>How much money do you spend per week on alcohol (on average)?</label>
@@ -115,11 +125,17 @@ let streak = ls.get('streak',0);
 let longestStreak = ls.get('longestStreak',0);
 let baselineSpend = ls.get('baselineSpend', null);
 
+// Reminders state
+const reminderEnabledEl = document.getElementById('reminderEnabled');
+const reminderTimeEl = document.getElementById('reminderTime');
+const reminderStatusEl = document.getElementById('reminderStatus');
+reminderEnabledEl.checked = !!ls.get('reminderEnabled', false);
+reminderTimeEl.value = ls.get('reminderTime', '20:00');
+
 function renderStats(){
   document.getElementById('currentStreak').textContent = streak;
   document.getElementById('daysSober').textContent = calcDaysSober();
   document.getElementById('longestStreak').textContent = longestStreak;
-  
   if(baselineSpend){
     const daily = baselineSpend/7;
     const saved = Math.round(daily*calcDaysSober());
@@ -133,7 +149,7 @@ function calcDaysSober(){
   const s=new Date(firstSoberDate), n=new Date();
   return Math.max(0,Math.floor((n-s)/(1000*60*60*24)));
 }
-// update daily streak
+// update daily streak (once per calendar day)
 (function daily(){
   const k='lastStreakDay', last=ls.get(k,null), today=new Date().toDateString();
   if(last!==today){
@@ -166,13 +182,15 @@ function renderDiaryHistory(){
   const historyEl=document.getElementById('diaryHistory'); const entries=[];
   for(let i=0;i<localStorage.length;i++){
     const k=localStorage.key(i);
-    if(k.startsWith("diary:")) entries.push(JSON.parse(localStorage.getItem(k)));
+    if(k && k.startsWith("diary:")) {
+      try { entries.push(JSON.parse(localStorage.getItem(k))); } catch {}
+    }
   }
   entries.sort((a,b)=> new Date(b.date)-new Date(a.date));
   if(entries.length===0){historyEl.textContent="No entries yet.";return;}
   historyEl.innerHTML=entries.map(e=>`
     <div style="margin-bottom:8px;padding:6px;border-bottom:1px solid #eee;">
-      <strong>${e.date}</strong> — <em>${e.mood}</em><br>${e.note||""}
+      <strong>${e.date||'Unknown date'}</strong> — <em>${e.mood||'—'}</em><br>${e.note?e.note:""}
     </div>`).join("");
 }
 renderDiaryHistory();
@@ -187,6 +205,7 @@ document.getElementById('relapseBtn').addEventListener('click',()=>{
     alert("Relapse logged. Tomorrow is a new day 🌱");
   }
 });
+
 // Reset
 document.getElementById('resetBtn').addEventListener('click',()=>{
   if(confirm("Reset ALL stats (diary will remain)?")){
@@ -217,10 +236,59 @@ document.getElementById('saveSetup').addEventListener('click',()=>{
   }
 });
 
+// Reminders (best-effort in-app)
+function requestPermissionIfNeeded() {
+  if (!('Notification' in window)) return Promise.resolve('unsupported');
+  if (Notification.permission === 'granted') return Promise.resolve('granted');
+  if (Notification.permission === 'denied') return Promise.resolve('denied');
+  return Notification.requestPermission();
+}
+function fireReminder() {
+  const title = 'Daily check-in';
+  const body = 'How are you feeling? Log a diary entry or update your progress.';
+  if ('Notification' in window && Notification.permission === 'granted') {
+    try { new Notification(title, { body, icon: 'icons/icon-192.png' }); }
+    catch { alert(body); }
+  } else {
+    alert(body);
+  }
+}
+function scheduleTick() {
+  clearInterval(window.__reminderTimer);
+  if (!reminderEnabledEl.checked) {
+    reminderStatusEl.textContent = 'Daily reminder is off.';
+    return;
+  }
+  const [hh, mm] = (reminderTimeEl.value || '20:00').split(':').map(n => parseInt(n,10));
+  reminderStatusEl.textContent = `Reminder set for ${hh.toString().padStart(2,'0')}:${mm.toString().padStart(2,'0')} daily.`;
+  window.__reminderTimer = setInterval(() => {
+    const now = new Date();
+    if (now.getHours() === hh && now.getMinutes() === mm && now.getSeconds() < 5) {
+      const key = 'reminderLast:' + now.toDateString();
+      if (ls.get(key, null)) return; // one per day
+      ls.set(key, true);
+      fireReminder();
+    }
+  }, 1000);
+}
+document.getElementById('saveReminder').addEventListener('click', async () => {
+  ls.set('reminderEnabled', reminderEnabledEl.checked);
+  ls.set('reminderTime', reminderTimeEl.value || '20:00');
+  if (reminderEnabledEl.checked) {
+    const perm = await requestPermissionIfNeeded();
+    if (perm !== 'granted') {
+      reminderStatusEl.textContent = 'Notifications not allowed — using in-app alerts.';
+    }
+  }
+  scheduleTick();
+});
+scheduleTick();
+
 // PWA install
 let deferredPrompt; const installBtn=document.getElementById('installBtn');
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBtn.style.display="inline-block";});
 installBtn.addEventListener('click',async()=>{
+  if(!deferredPrompt) return alert("Tip: choose 'Install app' from your browser menu");
   deferredPrompt.prompt(); await deferredPrompt.userChoice; installBtn.style.display="none";
 });
 </script>
