@@ -9,7 +9,6 @@
   <link rel="icon" href="icons/icon-192.png" />
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <style>
-    :root { color-scheme: light; } /* Force light for inputs */
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background: #f2f4f8; color: #1f2937; }
     header { background: linear-gradient(135deg, #4facfe, #00f2fe); color: white; padding: 28px 20px; text-align: center; }
     header h1 { margin: 0 0 6px; font-size: 28px; letter-spacing: 0.3px; }
@@ -25,30 +24,21 @@
     .row { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
     label { font-size: 13px; color: #374151; }
     
-    /* 🚀 Strong Mobile-Safe Input Fix */
-    textarea, input[type="text"], input[type="number"], input[type="date"], input[type="time"], select {
+    /* Base input styles */
+    textarea, input, select {
       width: 100%;
       padding: 10px;
       border-radius: 8px;
       border: 1px solid #d1d5db;
-      background-color: #ffffff !important;   /* hard force white */
-      color: #000000 !important;              /* hard force black */
-      -webkit-text-fill-color: #000000 !important; /* iOS/Chrome fix */
+      background: #fff;
       font-size: 16px;
       line-height: 1.4;
     }
 
-    textarea::placeholder,
-    input::placeholder {
-      color: #9ca3af;
+    input::placeholder, textarea::placeholder { 
+      color: #9ca3af !important; 
     }
-
-    input:-webkit-autofill {
-      -webkit-text-fill-color: #000000 !important;
-      -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
-      background-color: #ffffff !important;
-    }
-
+    
     textarea:focus, input:focus, select:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px #6366f11f; }
     .btn { padding: 10px 14px; background: #4facfe; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
     .btn:hover { background: #3a8edb; }
@@ -68,37 +58,51 @@
   <div class="container">
     <div class="cards">
 
-      <!-- Progress -->
       <div class="card">
         <h3>Progress</h3>
         <div class="stats">
-          <div class="stat"><div class="num" id="daysSober">0</div><div class="muted">Days Sober</div></div>
-          <div class="stat"><div class="num" id="currentStreak">0</div><div class="muted">Current Streak</div></div>
-          <div class="stat"><div class="num" id="drinksThisWeek">0</div><div class="muted">Drinks This Week</div></div>
-          <div class="stat"><div class="num" id="moneySaved">£0</div><div class="muted">Estimated Money Saved</div></div>
+          <div class="stat">
+            <div class="num" id="daysSober">0</div>
+            <div class="muted">Days Sober</div>
+          </div>
+          <div class="stat">
+            <div class="num" id="currentStreak">0</div>
+            <div class="muted">Current Streak</div>
+          </div>
+          <div class="stat">
+            <div class="num" id="drinksThisWeek">0</div>
+            <div class="muted">Drinks This Week</div>
+          </div>
+          <div class="stat">
+            <div class="num" id="moneySaved">£0</div>
+            <div class="muted">Estimated Money Saved</div>
+          </div>
         </div>
       </div>
 
-      <!-- Add Drink -->
       <div class="card">
         <h3>Add a Drink</h3>
         <div class="row">
-          <div><label>Drink Type</label>
+          <div>
+            <label>Drink Type</label>
             <select id="drinkType">
               <option value="Beer">Beer</option>
               <option value="Wine">Wine</option>
               <option value="Spirit">Spirit</option>
             </select>
           </div>
-          <div><label>Name (optional)</label>
+          <div>
+            <label>Name (optional)</label>
             <input id="drinkName" type="text" placeholder="e.g., IPA, Red Wine" />
           </div>
         </div>
         <div class="row">
-          <div><label>Volume (ml)</label>
+          <div>
+            <label>Volume (ml)</label>
             <input id="drinkMl" type="number" inputmode="numeric" placeholder="330" />
           </div>
-          <div><label>Alcohol % (ABV)</label>
+          <div>
+            <label>Alcohol % (ABV)</label>
             <input id="drinkAbv" type="number" step="0.1" inputmode="decimal" placeholder="5.0" />
           </div>
         </div>
@@ -108,15 +112,21 @@
         </div>
       </div>
 
-      <!-- Daily Diary -->
       <div class="card">
         <h3>Daily Diary</h3>
         <div class="row">
-          <div><label>Date</label><input id="diaryDate" type="date" /></div>
-          <div><label>Mood</label>
+          <div>
+            <label>Date</label>
+            <input id="diaryDate" type="date" />
+          </div>
+          <div>
+            <label>Mood</label>
             <select id="diaryMood">
-              <option>Great</option><option>Good</option><option>Okay</option>
-              <option>Meh</option><option>Struggling</option>
+              <option>Great</option>
+              <option>Good</option>
+              <option>Okay</option>
+              <option>Meh</option>
+              <option>Struggling</option>
             </select>
           </div>
         </div>
@@ -128,22 +138,24 @@
         </div>
       </div>
 
-      <!-- Daily Motivation -->
       <div class="card">
         <h3>Daily Motivation</h3>
         <div class="quote" id="quoteBox">Loading your daily quote…</div>
         <div class="muted" id="quoteAttribution"></div>
       </div>
 
-      <!-- Settings -->
       <div class="card">
         <h3>Reminders & Settings</h3>
         <button id="installBtn" class="btn" type="button" style="display:none;">📲 Install App</button>
         <button id="resetBtn" class="btn" type="button" style="margin-top:10px; background:#ef4444;">🔄 Reset Progress</button>
         <div style="height:8px;"></div>
         <div class="flex">
-          <div class="switch"><input type="checkbox" id="reminderEnabled" /><label for="reminderEnabled">Daily reminder</label></div>
-          <input type="time" id="reminderTime" /><button id="saveReminder" class="btn">Save</button>
+          <div class="switch">
+            <input type="checkbox" id="reminderEnabled" />
+            <label for="reminderEnabled">Daily reminder</label>
+          </div>
+          <input type="time" id="reminderTime" />
+          <button id="saveReminder" class="btn">Save</button>
         </div>
         <div class="muted" id="reminderStatus" style="margin-top:6px;"></div>
         <p class="muted" style="margin-top:10px;">iPhone users: open this site in Safari, tap Share, then "Add to Home Screen".</p>
@@ -153,8 +165,257 @@
   </div>
 
   <script>
-    /* ---- JS same as before (tracking, diary, quotes, reminders, reset, install button, SW) ---- */
-    /* To keep focus: I left all your functional JS intact, only CSS above was changed */
+    // ---- Utilities & Storage Helpers
+    const ls = {
+      get: (k, d=null) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
+      set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
+    };
+
+    // ---- Progress / Drinks / Money
+    let drinksThisWeek = ls.get('drinksThisWeek', 0);
+    let firstSoberDate = ls.get('firstSoberDate', null);
+    let streak = ls.get('streak', 0);
+    const drinkPrice = 5;
+
+    function renderStats() {
+      document.getElementById('drinksThisWeek').textContent = drinksThisWeek;
+      document.getElementById('currentStreak').textContent = streak;
+      const daysSober = calcDaysSober();
+      document.getElementById('daysSober').textContent = daysSober;
+      const moneySaved = (streak > 0 ? streak : 0) * drinkPrice;
+      document.getElementById('moneySaved').textContent = '£' + moneySaved;
+    }
+
+    function calcDaysSober() {
+      if (!firstSoberDate) return 0;
+      const start = new Date(firstSoberDate);
+      const now = new Date();
+      const diff = Math.floor((now - start) / (1000*60*60*24));
+      return Math.max(0, diff);
+    }
+
+    function resetSoberIfNeeded() {
+      const today = new Date();
+      const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+      firstSoberDate = tomorrow.toISOString();
+      streak = 0;
+      ls.set('firstSoberDate', firstSoberDate);
+      ls.set('streak', streak);
+    }
+
+    document.getElementById('addDrink').addEventListener('click', () => {
+      drinksThisWeek += 1;
+      ls.set('drinksThisWeek', drinksThisWeek);
+      resetSoberIfNeeded();
+      renderStats();
+      toast('Logged a drink. New day, new start 💪');
+    });
+
+    // Reset Progress Button
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      if (confirm("Are you sure you want to reset all progress?")) {
+        localStorage.clear();
+        drinksThisWeek = 0;
+        streak = 0;
+        firstSoberDate = null;
+        renderStats();
+        toast("Progress reset. Fresh start 🌱");
+      }
+    });
+
+    // Increment streak daily
+    (function updateStreakDaily() {
+      const key = 'lastStreakDay';
+      const last = ls.get(key, null);
+      const today = new Date().toDateString();
+      if (last !== today) {
+        streak = (streak || 0) + 1;
+        if (!firstSoberDate) firstSoberDate = new Date().toISOString();
+        ls.set('firstSoberDate', firstSoberDate);
+        ls.set('streak', streak);
+        ls.set(key, today);
+      }
+    })();
+
+    renderStats();
+
+    // ---- Diary
+    const diaryDateEl = document.getElementById('diaryDate');
+    const diaryMoodEl = document.getElementById('diaryMood');
+    const diaryEl = document.getElementById('diary');
+    const diaryMsgEl = document.getElementById('diarySavedMsg');
+
+    diaryDateEl.valueAsDate = new Date();
+
+    document.getElementById('saveDiary').addEventListener('click', () => {
+      const key = 'diary:' + (diaryDateEl.value || new Date().toISOString().slice(0,10));
+      const entry = { date: diaryDateEl.value, mood: diaryMoodEl.value, note: diaryEl.value, savedAt: new Date().toISOString() };
+      ls.set(key, entry);
+      diaryMsgEl.textContent = 'Saved ✔';
+      setTimeout(() => diaryMsgEl.textContent = '', 2000);
+    });
+
+    // ---- Daily Motivation
+    const QUOTES = [
+      { q: "One day at a time.", a: "AA Slogan" },
+      { q: "You are stronger than your strongest excuse.", a: "Unknown" },
+      { q: "Small steps every day lead to big results.", a: "Unknown" },
+      { q: "Progress, not perfection.", a: "AA Slogan" },
+      { q: "The comeback is always stronger than the setback.", a: "Unknown" },
+      { q: "Cravings pass. Your reasons last.", a: "Unknown" },
+      { q: "What you do today can improve all your tomorrows.", a: "Ralph Marston" }
+    ];
+    function dailyIndex(n) {
+      const d = new Date();
+      const seed = d.getFullYear()*1000 + (d.getMonth()+1)*50 + d.getDate();
+      return seed % n;
+    }
+    const qi = dailyIndex(QUOTES.length);
+    document.getElementById('quoteBox').textContent = '"' + QUOTES[qi].q + '"';
+    document.getElementById('quoteAttribution').textContent = '— ' + QUOTES[qi].a;
+
+    // ---- Reminders / Notifications
+    const reminderEnabledEl = document.getElementById('reminderEnabled');
+    const reminderTimeEl = document.getElementById('reminderTime');
+    const reminderStatusEl = document.getElementById('reminderStatus');
+
+    const savedEnabled = ls.get('reminderEnabled', false);
+    const savedTime = ls.get('reminderTime', '20:00');
+    reminderEnabledEl.checked = !!savedEnabled;
+    reminderTimeEl.value = savedTime;
+
+    function requestPermissionIfNeeded() {
+      if (!('Notification' in window)) return Promise.resolve('unsupported');
+      if (Notification.permission === 'granted') return Promise.resolve('granted');
+      if (Notification.permission === 'denied') return Promise.resolve('denied');
+      return Notification.requestPermission();
+    }
+
+    function scheduleTick() {
+      clearInterval(window.__reminderTimer);
+      if (!reminderEnabledEl.checked) {
+        reminderStatusEl.textContent = 'Daily reminder is off.';
+        return;
+      }
+      const [hh, mm] = (reminderTimeEl.value || '20:00').split(':').map(n => parseInt(n, 10));
+      reminderStatusEl.textContent = `Reminder set for ${hh.toString().padStart(2,'0')}:${mm.toString().padStart(2,'0')} daily.`;
+      window.__reminderTimer = setInterval(() => {
+        const now = new Date();
+        if (now.getHours() === hh && now.getMinutes() === mm && now.getSeconds() < 5) {
+          const key = 'reminderLast:' + now.toDateString();
+          if (ls.get(key, null)) return;
+          ls.set(key, true);
+          fireReminder();
+        }
+      }, 1000);
+    }
+
+    async function fireReminder() {
+      const title = 'Daily check-in';
+      const body = 'How are you feeling? Log a quick diary entry or update drinks.';
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try { new Notification(title, { body, icon: 'icons/icon-192.png' }); }
+        catch { alert(body); }
+      } else {
+        alert(body);
+      }
+    }
+
+    document.getElementById('saveReminder').addEventListener('click', async () => {
+      ls.set('reminderEnabled', reminderEnabledEl.checked);
+      ls.set('reminderTime', reminderTimeEl.value || '20:00');
+      if (reminderEnabledEl.checked) {
+        const perm = await requestPermissionIfNeeded();
+        if (perm !== 'granted') {
+          reminderStatusEl.textContent = 'Notifications not allowed by the browser. We will use in-app alerts.';
+        }
+      }
+      scheduleTick();
+      toast('Reminder settings saved.');
+    });
+
+    scheduleTick();
+
+    // ---- Toast helper
+    function toast(msg) {
+      try {
+        if (!window.__toastEl) {
+          const el = document.createElement('div');
+          el.style.position = 'fixed';
+          el.style.left = '50%';
+          el.style.bottom = '18px';
+          el.style.transform = 'translateX(-50%)';
+          el.style.background = '#111827';
+          el.style.color = 'white';
+          el.style.padding = '10px 14px';
+          el.style.borderRadius = '999px';
+          el.style.fontSize = '14px';
+          el.style.zIndex = '9999';
+          el.style.boxShadow = '0 6px 20px rgba(0,0,0,0.25)';
+          el.style.opacity = '0';
+          el.style.transition = 'opacity .2s ease';
+          document.body.appendChild(el);
+          window.__toastEl = el;
+        }
+        window.__toastEl.textContent = msg;
+        window.__toastEl.style.opacity = '1';
+        setTimeout(() => window.__toastEl && (window.__toastEl.style.opacity = '0'), 1800);
+      } catch {}
+    }
+
+    // ---- PWA: Service Worker registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js', { scope: './' })
+          .then(() => console.log('SW registered'))
+          .catch(err => console.warn('SW registration failed', err));
+      });
+    }
+
+    // ---- PWA Install Button logic
+    let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'inline-block';
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        try {
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log('Install outcome:', outcome);
+        } catch {}
+        deferredPrompt = null;
+        installBtn.style.display = 'none';
+      } else {
+        alert("Tip: In your browser menu choose 'Install app' or 'Add to Home screen'");
+      }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      console.log('PWA installed');
+      installBtn.style.display = 'none';
+      toast('App installed 🎉');
+    });
+
+    // 🚀 FORCE INPUT VISIBILITY ON MOBILE (runtime fix)
+    function forceInputVisibility() {
+      const els = document.querySelectorAll('input, textarea, select');
+      els.forEach(el => {
+        el.style.backgroundColor = '#ffffff';
+        el.style.color = '#000000';
+        el.style.caretColor = '#000000';
+        el.style.setProperty('-webkit-text-fill-color', '#000000', 'important');
+      });
+    }
+
+    // Run visibility fix as soon as possible
+    document.addEventListener('DOMContentLoaded', forceInputVisibility);
+    window.addEventListener('load', () => setTimeout(forceInputVisibility, 100));
   </script>
 </body>
 </html>
