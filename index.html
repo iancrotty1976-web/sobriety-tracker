@@ -38,11 +38,19 @@
     textarea:focus, input:focus, select:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px #6366f11f; }
     .btn { padding: 10px 14px; background: #4facfe; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
     .btn:hover { background: #3a8edb; }
+    .btn-danger { background: #ef4444; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-sm { padding: 6px 10px; font-size: 12px; border-radius: 6px; }
     .muted { color: #6b7280; font-size: 13px; }
     .quote { background: linear-gradient(135deg, #eef2ff, #ecfeff); border: 1px solid #dbeafe; border-radius: 10px; padding: 12px; }
     .flex { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .switch { display: inline-flex; align-items: center; gap: 8px; }
     .switch input { width: 18px; height: 18px; }
+    .entry { margin-bottom:10px; padding:10px; border:1px solid #e5e7eb; border-radius:10px; background:#fcfdff; }
+    .entry-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:6px; }
+    .entry-date { font-weight:700; }
+    .entry-mood { font-style:italic; color:#4b5563; }
+    .entry-note { white-space:pre-wrap; }
   </style>
 </head>
 <body>
@@ -103,6 +111,12 @@
         </div>
       </div>
 
+      <!-- Diary History (with delete) -->
+      <div class="card">
+        <h3>Diary History</h3>
+        <div id="diaryHistory" class="muted">No entries yet.</div>
+      </div>
+
       <!-- Daily Motivation -->
       <div class="card">
         <h3>Daily Motivation</h3>
@@ -114,7 +128,7 @@
       <div class="card">
         <h3>Reminders & Settings</h3>
         <button id="installBtn" class="btn" type="button" style="display:none;">📲 Install App</button>
-        <button id="resetBtn" class="btn" type="button" style="margin-top:10px; background:#ef4444;">🔄 Reset Progress</button>
+        <button id="resetBtn" class="btn btn-danger" type="button" style="margin-top:10px;">🔄 Reset Progress</button>
         <div style="height:8px;"></div>
         <div class="flex">
           <div class="switch"><input type="checkbox" id="reminderEnabled" /><label for="reminderEnabled">Daily reminder</label></div>
@@ -127,8 +141,14 @@
   </div>
 
   <script>
-    const ls = { get:(k,d=null)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}}, set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)) };
+    // LocalStorage helpers
+    const ls = {
+      get:(k,d=null)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},
+      set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)),
+      del:(k)=>localStorage.removeItem(k)
+    };
 
+    // Stats
     let drinksThisWeek = ls.get('drinksThisWeek',0);
     let firstSoberDate = ls.get('firstSoberDate',null);
     let streak = ls.get('streak',0);
@@ -142,57 +162,214 @@
       document.getElementById('moneySaved').textContent='£'+((streak>0?streak:0)*drinkPrice);
       document.getElementById('longestStreak').textContent=longestStreak;
     }
-    function calcDaysSober(){ if(!firstSoberDate)return 0; const s=new Date(firstSoberDate),n=new Date(); return Math.max(0,Math.floor((n-s)/(1000*60*60*24))); }
-    function resetSoberIfNeeded(){ const t=new Date(),tm=new Date(t.getFullYear(),t.getMonth(),t.getDate()+1); firstSoberDate=tm.toISOString(); streak=0; ls.set('firstSoberDate',firstSoberDate); ls.set('streak',streak); }
+    function calcDaysSober(){
+      if(!firstSoberDate) return 0;
+      const s=new Date(firstSoberDate), n=new Date();
+      return Math.max(0,Math.floor((n-s)/(1000*60*60*24)));
+    }
+    function resetSoberIfNeeded(){
+      const t=new Date(), tm=new Date(t.getFullYear(),t.getMonth(),t.getDate()+1);
+      firstSoberDate=tm.toISOString();
+      streak=0;
+      ls.set('firstSoberDate',firstSoberDate);
+      ls.set('streak',streak);
+    }
 
-    document.getElementById('addDrink').addEventListener('click',()=>{ drinksThisWeek++; ls.set('drinksThisWeek',drinksThisWeek); resetSoberIfNeeded(); renderStats(); toast('Logged a drink. New day, new start 💪'); });
+    document.getElementById('addDrink').addEventListener('click',()=>{
+      drinksThisWeek++;
+      ls.set('drinksThisWeek',drinksThisWeek);
+      resetSoberIfNeeded();
+      renderStats();
+      toast('Logged a drink. New day, new start 💪');
+    });
 
-    // ✅ Reset button logic preserving diary + tracking longest streak
+    // Reset button (preserve diary + track longest)
     document.getElementById('resetBtn').addEventListener('click',()=>{
       if(confirm("Reset stats? (Diary entries will be kept)")){
         if(streak>longestStreak){ longestStreak=streak; ls.set('longestStreak',longestStreak); }
         drinksThisWeek=0; streak=0; firstSoberDate=null;
         ls.set('drinksThisWeek',0); ls.set('streak',0); ls.set('firstSoberDate',null);
-        renderStats(); toast(`Progress reset. Longest streak: ${longestStreak} days 🌟`);
+        renderStats();
+        toast(`Progress reset. Longest streak: ${longestStreak} days 🌟`);
       }
     });
 
-    // Daily streak updater
-    (function daily(){const k='lastStreakDay',last=ls.get(k,null),today=new Date().toDateString();if(last!==today){streak=(streak||0)+1;if(!firstSoberDate)firstSoberDate=new Date().toISOString();ls.set('firstSoberDate',firstSoberDate);ls.set('streak',streak);ls.set(k,today);} })();
+    // Daily streak incrementer
+    (function daily(){
+      const k='lastStreakDay', last=ls.get(k,null), today=new Date().toDateString();
+      if(last!==today){
+        streak=(streak||0)+1;
+        if(!firstSoberDate) firstSoberDate=new Date().toISOString();
+        ls.set('firstSoberDate',firstSoberDate);
+        ls.set('streak',streak);
+        ls.set(k,today);
+      }
+    })();
 
     renderStats();
 
     // Diary
-    const diaryDateEl=document.getElementById('diaryDate'), diaryMoodEl=document.getElementById('diaryMood'), diaryEl=document.getElementById('diary'), diaryMsgEl=document.getElementById('diarySavedMsg');
+    const diaryDateEl=document.getElementById('diaryDate'),
+          diaryMoodEl=document.getElementById('diaryMood'),
+          diaryEl=document.getElementById('diary'),
+          diaryMsgEl=document.getElementById('diarySavedMsg');
+
     diaryDateEl.valueAsDate=new Date();
-    document.getElementById('saveDiary').addEventListener('click',()=>{ const k='diary:'+ (diaryDateEl.value||new Date().toISOString().slice(0,10)); ls.set(k,{date:diaryDateEl.value,mood:diaryMoodEl.value,note:diaryEl.value,savedAt:new Date().toISOString()}); diaryMsgEl.textContent='Saved ✔'; setTimeout(()=>diaryMsgEl.textContent='',2000); });
+
+    document.getElementById('saveDiary').addEventListener('click',()=>{ 
+      const dateVal = diaryDateEl.value || new Date().toISOString().slice(0,10);
+      const key='diary:'+ dateVal; 
+      const entry={key, date: dateVal, mood: diaryMoodEl.value, note: diaryEl.value, savedAt:new Date().toISOString()};
+      ls.set(key,entry); 
+      diaryMsgEl.textContent='Saved ✔'; setTimeout(()=>diaryMsgEl.textContent='',2000); 
+      renderDiaryHistory(); 
+    });
+
+    // Diary History with delete
+    function renderDiaryHistory() {
+      const historyEl=document.getElementById('diaryHistory');
+      const entries=[];
+      for(let i=0;i<localStorage.length;i++){
+        const key=localStorage.key(i);
+        if(key && key.startsWith("diary:")) {
+          try {
+            const e = JSON.parse(localStorage.getItem(key));
+            if (e) entries.push({ ...e, key });
+          } catch {}
+        }
+      }
+      entries.sort((a,b)=> new Date(b.date)-new Date(a.date));
+      if(entries.length===0){
+        historyEl.textContent="No entries yet.";
+        return;
+      }
+      historyEl.innerHTML = entries.map(e => `
+        <div class="entry" data-key="${e.key}">
+          <div class="entry-head">
+            <div>
+              <span class="entry-date">${e.date || "Unknown date"}</span>
+              <span class="entry-mood"> — ${e.mood || "Unknown mood"}</span>
+            </div>
+            <button type="button" class="btn btn-sm btn-danger delete-entry" aria-label="Delete entry ${e.date}">Delete</button>
+          </div>
+          <div class="entry-note">${e.note ? escapeHtml(e.note) : "<span class='muted'>No notes</span>"}</div>
+        </div>
+      `).join("");
+    }
+
+    // Small helper to avoid HTML injection in notes
+    function escapeHtml(str){
+      return String(str)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#039;')
+        .replace(/\n/g,'<br/>');
+    }
+
+    // Event delegation for delete buttons
+    document.getElementById('diaryHistory').addEventListener('click', (e) => {
+      const btn = e.target.closest('.delete-entry');
+      if (!btn) return;
+      const wrap = btn.closest('.entry');
+      const key = wrap?.getAttribute('data-key');
+      if (!key) return;
+      const dateLabel = wrap.querySelector('.entry-date')?.textContent || 'this entry';
+      if (confirm(`Delete diary entry for ${dateLabel}? This cannot be undone.`)) {
+        ls.del(key);
+        renderDiaryHistory();
+        toast('Diary entry deleted.');
+      }
+    });
+
+    renderDiaryHistory();
 
     // Quotes
     const QUOTES=[{q:"One day at a time.",a:"AA Slogan"},{q:"You are stronger than your strongest excuse.",a:"Unknown"},{q:"Small steps every day lead to big results.",a:"Unknown"},{q:"Progress, not perfection.",a:"AA Slogan"},{q:"The comeback is always stronger than the setback.",a:"Unknown"},{q:"Cravings pass. Your reasons last.",a:"Unknown"},{q:"What you do today can improve all your tomorrows.",a:"Ralph Marston"}];
     const qi=(new Date().getFullYear()*1000+(new Date().getMonth()+1)*50+new Date().getDate())%QUOTES.length;
-    document.getElementById('quoteBox').textContent='"'+QUOTES[qi].q+'"'; document.getElementById('quoteAttribution').textContent='— '+QUOTES[qi].a;
+    document.getElementById('quoteBox').textContent='"'+QUOTES[qi].q+'"';
+    document.getElementById('quoteAttribution').textContent='— '+QUOTES[qi].a;
 
     // Notifications
-    const reminderEnabledEl=document.getElementById('reminderEnabled'),reminderTimeEl=document.getElementById('reminderTime'),reminderStatusEl=document.getElementById('reminderStatus');
-    reminderEnabledEl.checked=!!ls.get('reminderEnabled',false); reminderTimeEl.value=ls.get('reminderTime','20:00');
-    function reqPerm(){if(!('Notification'in window))return Promise.resolve('unsupported');if(Notification.permission==='granted')return Promise.resolve('granted');if(Notification.permission==='denied')return Promise.resolve('denied');return Notification.requestPermission();}
-    function tick(){clearInterval(window.__t);if(!reminderEnabledEl.checked){reminderStatusEl.textContent='Daily reminder is off.';return;} const[hh,mm]=(reminderTimeEl.value||'20:00').split(':').map(n=>parseInt(n));reminderStatusEl.textContent=`Reminder set for ${hh.toString().padStart(2,'0')}:${mm.toString().padStart(2,'0')} daily.`;window.__t=setInterval(()=>{const n=new Date();if(n.getHours()===hh&&n.getMinutes()===mm&&n.getSeconds()<5){const k='reminderLast:'+n.toDateString(); if(ls.get(k,null))return; ls.set(k,true); fireRem();}},1000);}
-    async function fireRem(){const b='How are you feeling? Log a quick diary entry or update drinks.'; if('Notification'in window&&Notification.permission==='granted'){try{new Notification('Daily check-in',{body:b,icon:'icons/icon-192.png'});}catch{alert(b);}}else{alert(b);}}
-    document.getElementById('saveReminder').addEventListener('click',async()=>{ls.set('reminderEnabled',reminderEnabledEl.checked); ls.set('reminderTime',reminderTimeEl.value||'20:00'); if(reminderEnabledEl.checked){const p=await reqPerm(); if(p!=='granted'){reminderStatusEl.textContent='Notifications not allowed - using alerts.'}} tick(); toast('Reminder saved.');});
+    const reminderEnabledEl=document.getElementById('reminderEnabled'),
+          reminderTimeEl=document.getElementById('reminderTime'),
+          reminderStatusEl=document.getElementById('reminderStatus');
+    reminderEnabledEl.checked=!!ls.get('reminderEnabled',false);
+    reminderTimeEl.value=ls.get('reminderTime','20:00');
+
+    function reqPerm(){
+      if(!('Notification'in window))return Promise.resolve('unsupported');
+      if(Notification.permission==='granted')return Promise.resolve('granted');
+      if(Notification.permission==='denied')return Promise.resolve('denied');
+      return Notification.requestPermission();
+    }
+    function tick(){
+      clearInterval(window.__t);
+      if(!reminderEnabledEl.checked){reminderStatusEl.textContent='Daily reminder is off.';return;}
+      const[hh,mm]=(reminderTimeEl.value||'20:00').split(':').map(n=>parseInt(n));
+      reminderStatusEl.textContent=`Reminder set for ${hh.toString().padStart(2,'0')}:${mm.toString().padStart(2,'0')} daily.`;
+      window.__t=setInterval(()=>{
+        const n=new Date();
+        if(n.getHours()===hh&&n.getMinutes()===mm&&n.getSeconds()<5){
+          const k='reminderLast:'+n.toDateString();
+          if(ls.get(k,null))return;
+          ls.set(k,true);
+          fireRem();
+        }
+      },1000);
+    }
+    async function fireRem(){
+      const b='How are you feeling? Log a quick diary entry or update drinks.';
+      if('Notification'in window&&Notification.permission==='granted'){
+        try{ new Notification('Daily check-in',{body:b,icon:'icons/icon-192.png'}); }
+        catch{ alert(b); }
+      } else { alert(b); }
+    }
+    document.getElementById('saveReminder').addEventListener('click',async()=>{
+      ls.set('reminderEnabled',reminderEnabledEl.checked);
+      ls.set('reminderTime',reminderTimeEl.value||'20:00');
+      if(reminderEnabledEl.checked){
+        const p=await reqPerm();
+        if(p!=='granted'){reminderStatusEl.textContent='Notifications not allowed - using alerts.'}
+      }
+      tick();
+      toast('Reminder saved.');
+    });
     tick();
 
     // Toast
-    function toast(m){if(!window.__tEl){const e=document.createElement('div');e.style='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:999px;font-size:14px;z-index:9999;box-shadow:0 6px 20px rgba(0,0,0,0.25);opacity:0;transition:opacity .2s';document.body.appendChild(e);window.__tEl=e;} window.__tEl.textContent=m; window.__tEl.style.opacity='1'; setTimeout(()=>window.__tEl&&(window.__tEl.style.opacity='0'),1800);}
+    function toast(m){
+      if(!window.__tEl){
+        const e=document.createElement('div');
+        e.style='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:999px;font-size:14px;z-index:9999;box-shadow:0 6px 20px rgba(0,0,0,0.25);opacity:0;transition:opacity .2s';
+        document.body.appendChild(e); window.__tEl=e;
+      }
+      window.__tEl.textContent=m; window.__tEl.style.opacity='1';
+      setTimeout(()=>window.__tEl&&(window.__tEl.style.opacity='0'),1800);
+    }
     
-    // PWA
-    if('serviceWorker'in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js');});}
-    let deferredPrompt;const installBtn=document.getElementById('installBtn');
+    // PWA registration
+    if('serviceWorker'in navigator){
+      window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js');});
+    }
+    let deferredPrompt; const installBtn=document.getElementById('installBtn');
     window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBtn.style.display='inline-block';});
-    installBtn.addEventListener('click',async()=>{if(deferredPrompt){deferredPrompt.prompt();try{await deferredPrompt.userChoice;}catch{}deferredPrompt=null;installBtn.style.display='none';}else alert("Tip: choose 'Install app' from your menu");});
+    installBtn.addEventListener('click',async()=>{
+      if(deferredPrompt){deferredPrompt.prompt();try{await deferredPrompt.userChoice;}catch{}deferredPrompt=null;installBtn.style.display='none';}
+      else alert("Tip: choose 'Install app' from your menu");
+    });
     window.addEventListener('appinstalled',()=>{installBtn.style.display='none';toast('App installed 🎉');});
 
     // Runtime visibility fix for mobile inputs
-    function forceInputVisibility(){document.querySelectorAll('input,textarea,select').forEach(el=>{el.style.background='#fff';el.style.color='#000';el.style.caretColor='#000';el.style.setProperty('-webkit-text-fill-color','#000','important');});}
+    function forceInputVisibility(){
+      document.querySelectorAll('input,textarea,select').forEach(el=>{
+        el.style.background='#fff';
+        el.style.color='#000';
+        el.style.caretColor='#000';
+        el.style.setProperty('-webkit-text-fill-color','#000','important');
+      });
+    }
     document.addEventListener('DOMContentLoaded',forceInputVisibility);
     window.addEventListener('load',()=>setTimeout(forceInputVisibility,100));
   </script>
