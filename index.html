@@ -3,60 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sobriety & Drinking Tracker</title>
+  <title>Sobriety Tracker</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="theme-color" content="#4facfe"/>
   <link rel="icon" href="icons/icon-192.png" />
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background: #f2f4f8; color: #1f2937; }
-    header { background: linear-gradient(135deg, #4facfe, #00f2fe); color: white; padding: 28px 20px; text-align: center; }
-    header h1 { margin: 0 0 6px; font-size: 28px; letter-spacing: 0.3px; }
-    header p { margin: 0; opacity: 0.95; }
-    .container { padding: 18px; max-width: 980px; margin: 0 auto; }
-    .cards { display: grid; gap: 16px; grid-template-columns: 1fr; }
-    @media (min-width: 700px) { .cards { grid-template-columns: repeat(2, 1fr); } }
-    .card { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
-    .card h3 { margin: 0 0 10px; font-size: 18px; }
-    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .stat { background: #f8fafc; border-radius: 10px; padding: 12px; text-align: center; }
-    .stat .num { font-size: 22px; font-weight: 700; color: #0f62fe; }
-    .row { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
-    label { font-size: 13px; color: #374151; }
-    textarea, input, select {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #d1d5db;
-      background: #ffffff;
-      color: #000000;
-      font-size: 16px;
-      line-height: 1.4;
-      -webkit-text-fill-color: #000000 !important;
-    }
-    input::placeholder, textarea::placeholder { color: #9ca3af; }
-    textarea:focus, input:focus, select:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px #6366f11f; }
-    .btn { padding: 10px 14px; background: #4facfe; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
-    .btn:hover { background: #3a8edb; }
-    .btn-danger { background: #ef4444; }
-    .btn-danger:hover { background: #dc2626; }
-    .btn-sm { padding: 6px 10px; font-size: 12px; border-radius: 6px; }
-    .muted { color: #6b7280; font-size: 13px; }
-    .quote { background: linear-gradient(135deg, #eef2ff, #ecfeff); border: 1px solid #dbeafe; border-radius: 10px; padding: 12px; }
-    .flex { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .switch { display: inline-flex; align-items: center; gap: 8px; }
-    .switch input { width: 18px; height: 18px; }
-    .entry { margin-bottom:10px; padding:10px; border:1px solid #e5e7eb; border-radius:10px; background:#fcfdff; }
-    .entry-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:6px; }
-    .entry-date { font-weight:700; }
-    .entry-mood { font-style:italic; color:#4b5563; }
-    .entry-note { white-space:pre-wrap; }
+    body { font-family: system-ui, sans-serif; margin:0; background:#f2f4f8; color:#1f2937; }
+    header { background: linear-gradient(135deg,#4facfe,#00f2fe); color:white; padding:28px 20px; text-align:center; }
+    header h1 { margin:0 0 6px; font-size:28px; }
+    .container { padding:18px; max-width:980px; margin:0 auto; }
+    .cards { display:grid; gap:16px; grid-template-columns:1fr; }
+    @media(min-width:700px){.cards{grid-template-columns:repeat(2,1fr);} }
+    .card { background:white; border-radius:12px; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+    .card h3 { margin:0 0 10px; font-size:18px; }
+    .stats { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+    .stat { background:#f8fafc; border-radius:10px; padding:12px; text-align:center; }
+    .stat .num { font-size:22px; font-weight:700; color:#0f62fe; }
+    .btn { padding:10px 14px; border:none; border-radius:8px; cursor:pointer; font-weight:600; color:white; }
+    .btn-primary { background:#4facfe; }
+    .btn-primary:hover { background:#3a8edb;}
+    .btn-danger { background:#ef4444; }
+    .btn-danger:hover { background:#dc2626; }
+    .muted{color:#6b7280;font-size:13px;}
+    textarea,input,select{width:100%;padding:10px;border-radius:8px;border:1px solid #d1d5db;background:#fff;
+      color:#000;font-size:16px;line-height:1.4;-webkit-text-fill-color:#000 !important;}
+    .quote{background:linear-gradient(135deg,#eef2ff,#ecfeff);border:1px solid #dbeafe;border-radius:10px;padding:12px;}
   </style>
 </head>
 <body>
   <header>
-    <h1>Sobriety & Drinking Tracker</h1>
-    <p>Build healthy habits, track your progress, and reflect daily.</p>
+    <h1>Sobriety Tracker</h1>
+    <p>Focus on your streaks and savings 🙌</p>
   </header>
 
   <div class="container">
@@ -69,309 +47,182 @@
           <div class="stat"><div class="num" id="daysSober">0</div><div class="muted">Days Sober</div></div>
           <div class="stat"><div class="num" id="currentStreak">0</div><div class="muted">Current Streak</div></div>
           <div class="stat"><div class="num" id="longestStreak">0</div><div class="muted">Longest Streak</div></div>
-          <div class="stat"><div class="num" id="drinksThisWeek">0</div><div class="muted">Drinks This Week</div></div>
-          <div class="stat"><div class="num" id="moneySaved">£0</div><div class="muted">Estimated Money Saved</div></div>
-        </div>
-      </div>
-
-      <!-- Add a Drink -->
-      <div class="card">
-        <h3>Add a Drink</h3>
-        <div class="row">
-          <div><label>Drink Type</label>
-            <select id="drinkType"><option value="Beer">Beer</option><option value="Wine">Wine</option><option value="Spirit">Spirit</option></select>
-          </div>
-          <div><label>Name (optional)</label><input id="drinkName" type="text" placeholder="e.g., IPA, Red Wine" /></div>
-        </div>
-        <div class="row">
-          <div><label>Volume (ml)</label><input id="drinkMl" type="number" inputmode="numeric" placeholder="330" /></div>
-          <div><label>Alcohol % (ABV)</label><input id="drinkAbv" type="number" step="0.1" inputmode="decimal" placeholder="5.0" /></div>
-        </div>
-        <div class="flex" style="margin-top:10px;">
-          <button id="addDrink" class="btn">Add Drink</button>
-          <span class="muted">Tip: aim for 0 drinks logged per day to grow your streak.</span>
+          <div class="stat"><div class="num" id="moneySaved">£0</div><div class="muted">Money Saved</div></div>
         </div>
       </div>
 
       <!-- Daily Diary -->
       <div class="card">
         <h3>Daily Diary</h3>
-        <div class="row">
-          <div><label>Date</label><input id="diaryDate" type="date" /></div>
-          <div><label>Mood</label>
-            <select id="diaryMood"><option>Great</option><option>Good</option><option>Okay</option>
-              <option>Meh</option><option>Struggling</option></select>
-          </div>
-        </div>
-        <label style="margin-top:8px;">Notes</label>
-        <textarea id="diary" rows="4" placeholder="How are you feeling today? Any triggers or wins?"></textarea>
-        <div class="flex" style="margin-top:10px;">
-          <button id="saveDiary" class="btn">Save Entry</button>
-          <span class="muted" id="diarySavedMsg" aria-live="polite"></span>
-        </div>
+        <label>Date</label><input id="diaryDate" type="date"/>
+        <label>Mood</label>
+        <select id="diaryMood"><option>Great</option><option>Good</option><option>Okay</option><option>Meh</option><option>Struggling</option></select>
+        <label>Notes</label><textarea id="diary" rows="3"></textarea>
+        <button id="saveDiary" class="btn btn-primary" style="margin-top:8px;">Save Entry</button>
+        <div class="muted" id="diarySavedMsg"></div>
       </div>
 
-      <!-- Diary History (with delete) -->
+      <!-- Diary History -->
       <div class="card">
         <h3>Diary History</h3>
         <div id="diaryHistory" class="muted">No entries yet.</div>
       </div>
 
+      <!-- Relapse -->
+      <div class="card">
+        <h3>Relapse</h3>
+        <button id="relapseBtn" class="btn btn-danger">Log a Relapse</button>
+        <p class="muted">This will reset your streak but keep your diary entries.</p>
+      </div>
+
       <!-- Daily Motivation -->
       <div class="card">
         <h3>Daily Motivation</h3>
-        <div class="quote" id="quoteBox">Loading your daily quote…</div>
+        <div class="quote" id="quoteBox">Loading...</div>
         <div class="muted" id="quoteAttribution"></div>
       </div>
 
       <!-- Settings -->
       <div class="card">
-        <h3>Reminders & Settings</h3>
-        <button id="installBtn" class="btn" type="button" style="display:none;">📲 Install App</button>
-        <button id="resetBtn" class="btn btn-danger" type="button" style="margin-top:10px;">🔄 Reset Progress</button>
-        <div style="height:8px;"></div>
-        <div class="flex">
-          <div class="switch"><input type="checkbox" id="reminderEnabled" /><label for="reminderEnabled">Daily reminder</label></div>
-          <input type="time" id="reminderTime" /><button id="saveReminder" class="btn">Save</button>
-        </div>
-        <div class="muted" id="reminderStatus" style="margin-top:6px;"></div>
-        <p class="muted" style="margin-top:10px;">iPhone users: open in Safari → Share → "Add to Home Screen".</p>
+        <h3>Settings</h3>
+        <button id="installBtn" class="btn btn-primary" type="button" style="display:none;">📲 Install App</button>
+        <button id="resetBtn" class="btn btn-danger" style="margin-top:8px;">Reset Progress</button>
       </div>
     </div>
   </div>
 
-  <script>
-    // LocalStorage helpers
-    const ls = {
-      get:(k,d=null)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},
-      set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)),
-      del:(k)=>localStorage.removeItem(k)
-    };
+  <!-- Setup Modal -->
+  <div id="setupModal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#000000dd;display:none;align-items:center;justify-content:center;">
+    <div style="background:white;padding:20px;border-radius:12px;max-width:400px;width:90%;">
+      <h3>Welcome 🎉</h3>
+      <p>Let’s personalise your journey.</p>
+      <label>How much money do you spend per week on alcohol (on average)?</label>
+      <input id="baselineSpend" type="number" placeholder="£ per week" />
+      <button id="saveSetup" class="btn btn-primary" style="margin-top:10px;">Save & Continue</button>
+    </div>
+  </div>
 
-    // Stats
-    let drinksThisWeek = ls.get('drinksThisWeek',0);
-    let firstSoberDate = ls.get('firstSoberDate',null);
-    let streak = ls.get('streak',0);
-    let longestStreak = ls.get('longestStreak',0);
-    const drinkPrice = 5;
+<script>
+const ls = {
+  get:(k,d=null)=>{ try{return JSON.parse(localStorage.getItem(k)) ?? d;}catch{return d;} },
+  set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)),
+  del:(k)=>localStorage.removeItem(k)
+};
 
-    function renderStats(){
-      document.getElementById('drinksThisWeek').textContent=drinksThisWeek;
-      document.getElementById('currentStreak').textContent=streak;
-      document.getElementById('daysSober').textContent=calcDaysSober();
-      document.getElementById('moneySaved').textContent='£'+((streak>0?streak:0)*drinkPrice);
-      document.getElementById('longestStreak').textContent=longestStreak;
-    }
-    function calcDaysSober(){
-      if(!firstSoberDate) return 0;
-      const s=new Date(firstSoberDate), n=new Date();
-      return Math.max(0,Math.floor((n-s)/(1000*60*60*24)));
-    }
-    function resetSoberIfNeeded(){
-      const t=new Date(), tm=new Date(t.getFullYear(),t.getMonth(),t.getDate()+1);
-      firstSoberDate=tm.toISOString();
-      streak=0;
-      ls.set('firstSoberDate',firstSoberDate);
-      ls.set('streak',streak);
-    }
+let drinksThisWeek = ls.get('drinksThisWeek',0);
+let firstSoberDate = ls.get('firstSoberDate',null);
+let streak = ls.get('streak',0);
+let longestStreak = ls.get('longestStreak',0);
+let baselineSpend = ls.get('baselineSpend', null);
 
-    document.getElementById('addDrink').addEventListener('click',()=>{
-      drinksThisWeek++;
-      ls.set('drinksThisWeek',drinksThisWeek);
-      resetSoberIfNeeded();
-      renderStats();
-      toast('Logged a drink. New day, new start 💪');
-    });
+function renderStats(){
+  document.getElementById('currentStreak').textContent = streak;
+  document.getElementById('daysSober').textContent = calcDaysSober();
+  document.getElementById('longestStreak').textContent = longestStreak;
+  
+  if(baselineSpend){
+    const daily = baselineSpend/7;
+    const saved = Math.round(daily*calcDaysSober());
+    document.getElementById('moneySaved').textContent = "£"+saved;
+  } else {
+    document.getElementById('moneySaved').textContent="£0";
+  }
+}
+function calcDaysSober(){
+  if(!firstSoberDate) return 0;
+  const s=new Date(firstSoberDate), n=new Date();
+  return Math.max(0,Math.floor((n-s)/(1000*60*60*24)));
+}
+// update daily streak
+(function daily(){
+  const k='lastStreakDay', last=ls.get(k,null), today=new Date().toDateString();
+  if(last!==today){
+    streak=(streak||0)+1;
+    if(!firstSoberDate) firstSoberDate=new Date().toISOString();
+    ls.set('firstSoberDate',firstSoberDate);
+    ls.set('streak',streak);
+    if(streak>longestStreak){ longestStreak=streak; ls.set('longestStreak',streak); }
+    ls.set(k,today);
+  }
+})();
+renderStats();
 
-    // Reset button (preserve diary + track longest)
-    document.getElementById('resetBtn').addEventListener('click',()=>{
-      if(confirm("Reset stats? (Diary entries will be kept)")){
-        if(streak>longestStreak){ longestStreak=streak; ls.set('longestStreak',longestStreak); }
-        drinksThisWeek=0; streak=0; firstSoberDate=null;
-        ls.set('drinksThisWeek',0); ls.set('streak',0); ls.set('firstSoberDate',null);
-        renderStats();
-        toast(`Progress reset. Longest streak: ${longestStreak} days 🌟`);
-      }
-    });
+// Diary
+const diaryDateEl=document.getElementById('diaryDate'),
+      diaryMoodEl=document.getElementById('diaryMood'),
+      diaryEl=document.getElementById('diary'),
+      diaryMsgEl=document.getElementById('diarySavedMsg');
+diaryDateEl.valueAsDate=new Date();
+document.getElementById('saveDiary').addEventListener('click',()=>{
+  const key='diary:'+ (diaryDateEl.value||new Date().toISOString().slice(0,10));
+  const entry={date:diaryDateEl.value,mood:diaryMoodEl.value,note:diaryEl.value,savedAt:new Date().toISOString()};
+  ls.set(key,entry);
+  diaryMsgEl.textContent='Saved ✔';
+  setTimeout(()=>diaryMsgEl.textContent='',2000);
+  renderDiaryHistory();
+});
+// Diary History
+function renderDiaryHistory(){
+  const historyEl=document.getElementById('diaryHistory'); const entries=[];
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k.startsWith("diary:")) entries.push(JSON.parse(localStorage.getItem(k)));
+  }
+  entries.sort((a,b)=> new Date(b.date)-new Date(a.date));
+  if(entries.length===0){historyEl.textContent="No entries yet.";return;}
+  historyEl.innerHTML=entries.map(e=>`
+    <div style="margin-bottom:8px;padding:6px;border-bottom:1px solid #eee;">
+      <strong>${e.date}</strong> — <em>${e.mood}</em><br>${e.note||""}
+    </div>`).join("");
+}
+renderDiaryHistory();
 
-    // Daily streak incrementer
-    (function daily(){
-      const k='lastStreakDay', last=ls.get(k,null), today=new Date().toDateString();
-      if(last!==today){
-        streak=(streak||0)+1;
-        if(!firstSoberDate) firstSoberDate=new Date().toISOString();
-        ls.set('firstSoberDate',firstSoberDate);
-        ls.set('streak',streak);
-        ls.set(k,today);
-      }
-    })();
-
+// Relapse
+document.getElementById('relapseBtn').addEventListener('click',()=>{
+  if(confirm("Log a relapse? This will reset your streak to 0.")){
+    if(streak>longestStreak){ longestStreak=streak; ls.set('longestStreak',streak);}
+    streak=0; firstSoberDate=null;
+    ls.set('streak',0); ls.set('firstSoberDate',null);
     renderStats();
+    alert("Relapse logged. Tomorrow is a new day 🌱");
+  }
+});
+// Reset
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  if(confirm("Reset ALL stats (diary will remain)?")){
+    streak=0; firstSoberDate=null; longestStreak=0;
+    ls.set('streak',0); ls.set('firstSoberDate',null); ls.set('longestStreak',0);
+    renderStats();
+  }
+});
 
-    // Diary
-    const diaryDateEl=document.getElementById('diaryDate'),
-          diaryMoodEl=document.getElementById('diaryMood'),
-          diaryEl=document.getElementById('diary'),
-          diaryMsgEl=document.getElementById('diarySavedMsg');
+// Motivation
+const QUOTES=[{q:"One day at a time.",a:"AA Slogan"},{q:"Progress, not perfection.",a:"AA Slogan"},{q:"You are stronger than your strongest excuse.",a:"Unknown"}];
+const qi=(new Date().getFullYear()*1000+(new Date().getMonth()+1)*50+new Date().getDate())%QUOTES.length;
+document.getElementById('quoteBox').textContent='"'+QUOTES[qi].q+'"';
+document.getElementById('quoteAttribution').textContent="— "+QUOTES[qi].a;
 
-    diaryDateEl.valueAsDate=new Date();
+// Setup Questions
+if(!baselineSpend){
+  document.getElementById('setupModal').style.display="flex";
+}
+document.getElementById('saveSetup').addEventListener('click',()=>{
+  const spend=parseFloat(document.getElementById('baselineSpend').value||"0");
+  if(spend>0){
+    baselineSpend=spend; ls.set('baselineSpend',spend);
+    document.getElementById('setupModal').style.display="none";
+    renderStats();
+  } else {
+    alert("Please enter a valid amount (£ per week)");
+  }
+});
 
-    document.getElementById('saveDiary').addEventListener('click',()=>{ 
-      const dateVal = diaryDateEl.value || new Date().toISOString().slice(0,10);
-      const key='diary:'+ dateVal; 
-      const entry={key, date: dateVal, mood: diaryMoodEl.value, note: diaryEl.value, savedAt:new Date().toISOString()};
-      ls.set(key,entry); 
-      diaryMsgEl.textContent='Saved ✔'; setTimeout(()=>diaryMsgEl.textContent='',2000); 
-      renderDiaryHistory(); 
-    });
-
-    // Diary History with delete
-    function renderDiaryHistory() {
-      const historyEl=document.getElementById('diaryHistory');
-      const entries=[];
-      for(let i=0;i<localStorage.length;i++){
-        const key=localStorage.key(i);
-        if(key && key.startsWith("diary:")) {
-          try {
-            const e = JSON.parse(localStorage.getItem(key));
-            if (e) entries.push({ ...e, key });
-          } catch {}
-        }
-      }
-      entries.sort((a,b)=> new Date(b.date)-new Date(a.date));
-      if(entries.length===0){
-        historyEl.textContent="No entries yet.";
-        return;
-      }
-      historyEl.innerHTML = entries.map(e => `
-        <div class="entry" data-key="${e.key}">
-          <div class="entry-head">
-            <div>
-              <span class="entry-date">${e.date || "Unknown date"}</span>
-              <span class="entry-mood"> — ${e.mood || "Unknown mood"}</span>
-            </div>
-            <button type="button" class="btn btn-sm btn-danger delete-entry" aria-label="Delete entry ${e.date}">Delete</button>
-          </div>
-          <div class="entry-note">${e.note ? escapeHtml(e.note) : "<span class='muted'>No notes</span>"}</div>
-        </div>
-      `).join("");
-    }
-
-    // Small helper to avoid HTML injection in notes
-    function escapeHtml(str){
-      return String(str)
-        .replace(/&/g,'&amp;')
-        .replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;')
-        .replace(/"/g,'&quot;')
-        .replace(/'/g,'&#039;')
-        .replace(/\n/g,'<br/>');
-    }
-
-    // Event delegation for delete buttons
-    document.getElementById('diaryHistory').addEventListener('click', (e) => {
-      const btn = e.target.closest('.delete-entry');
-      if (!btn) return;
-      const wrap = btn.closest('.entry');
-      const key = wrap?.getAttribute('data-key');
-      if (!key) return;
-      const dateLabel = wrap.querySelector('.entry-date')?.textContent || 'this entry';
-      if (confirm(`Delete diary entry for ${dateLabel}? This cannot be undone.`)) {
-        ls.del(key);
-        renderDiaryHistory();
-        toast('Diary entry deleted.');
-      }
-    });
-
-    renderDiaryHistory();
-
-    // Quotes
-    const QUOTES=[{q:"One day at a time.",a:"AA Slogan"},{q:"You are stronger than your strongest excuse.",a:"Unknown"},{q:"Small steps every day lead to big results.",a:"Unknown"},{q:"Progress, not perfection.",a:"AA Slogan"},{q:"The comeback is always stronger than the setback.",a:"Unknown"},{q:"Cravings pass. Your reasons last.",a:"Unknown"},{q:"What you do today can improve all your tomorrows.",a:"Ralph Marston"}];
-    const qi=(new Date().getFullYear()*1000+(new Date().getMonth()+1)*50+new Date().getDate())%QUOTES.length;
-    document.getElementById('quoteBox').textContent='"'+QUOTES[qi].q+'"';
-    document.getElementById('quoteAttribution').textContent='— '+QUOTES[qi].a;
-
-    // Notifications
-    const reminderEnabledEl=document.getElementById('reminderEnabled'),
-          reminderTimeEl=document.getElementById('reminderTime'),
-          reminderStatusEl=document.getElementById('reminderStatus');
-    reminderEnabledEl.checked=!!ls.get('reminderEnabled',false);
-    reminderTimeEl.value=ls.get('reminderTime','20:00');
-
-    function reqPerm(){
-      if(!('Notification'in window))return Promise.resolve('unsupported');
-      if(Notification.permission==='granted')return Promise.resolve('granted');
-      if(Notification.permission==='denied')return Promise.resolve('denied');
-      return Notification.requestPermission();
-    }
-    function tick(){
-      clearInterval(window.__t);
-      if(!reminderEnabledEl.checked){reminderStatusEl.textContent='Daily reminder is off.';return;}
-      const[hh,mm]=(reminderTimeEl.value||'20:00').split(':').map(n=>parseInt(n));
-      reminderStatusEl.textContent=`Reminder set for ${hh.toString().padStart(2,'0')}:${mm.toString().padStart(2,'0')} daily.`;
-      window.__t=setInterval(()=>{
-        const n=new Date();
-        if(n.getHours()===hh&&n.getMinutes()===mm&&n.getSeconds()<5){
-          const k='reminderLast:'+n.toDateString();
-          if(ls.get(k,null))return;
-          ls.set(k,true);
-          fireRem();
-        }
-      },1000);
-    }
-    async function fireRem(){
-      const b='How are you feeling? Log a quick diary entry or update drinks.';
-      if('Notification'in window&&Notification.permission==='granted'){
-        try{ new Notification('Daily check-in',{body:b,icon:'icons/icon-192.png'}); }
-        catch{ alert(b); }
-      } else { alert(b); }
-    }
-    document.getElementById('saveReminder').addEventListener('click',async()=>{
-      ls.set('reminderEnabled',reminderEnabledEl.checked);
-      ls.set('reminderTime',reminderTimeEl.value||'20:00');
-      if(reminderEnabledEl.checked){
-        const p=await reqPerm();
-        if(p!=='granted'){reminderStatusEl.textContent='Notifications not allowed - using alerts.'}
-      }
-      tick();
-      toast('Reminder saved.');
-    });
-    tick();
-
-    // Toast
-    function toast(m){
-      if(!window.__tEl){
-        const e=document.createElement('div');
-        e.style='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:999px;font-size:14px;z-index:9999;box-shadow:0 6px 20px rgba(0,0,0,0.25);opacity:0;transition:opacity .2s';
-        document.body.appendChild(e); window.__tEl=e;
-      }
-      window.__tEl.textContent=m; window.__tEl.style.opacity='1';
-      setTimeout(()=>window.__tEl&&(window.__tEl.style.opacity='0'),1800);
-    }
-    
-    // PWA registration
-    if('serviceWorker'in navigator){
-      window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js');});
-    }
-    let deferredPrompt; const installBtn=document.getElementById('installBtn');
-    window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBtn.style.display='inline-block';});
-    installBtn.addEventListener('click',async()=>{
-      if(deferredPrompt){deferredPrompt.prompt();try{await deferredPrompt.userChoice;}catch{}deferredPrompt=null;installBtn.style.display='none';}
-      else alert("Tip: choose 'Install app' from your menu");
-    });
-    window.addEventListener('appinstalled',()=>{installBtn.style.display='none';toast('App installed 🎉');});
-
-    // Runtime visibility fix for mobile inputs
-    function forceInputVisibility(){
-      document.querySelectorAll('input,textarea,select').forEach(el=>{
-        el.style.background='#fff';
-        el.style.color='#000';
-        el.style.caretColor='#000';
-        el.style.setProperty('-webkit-text-fill-color','#000','important');
-      });
-    }
-    document.addEventListener('DOMContentLoaded',forceInputVisibility);
-    window.addEventListener('load',()=>setTimeout(forceInputVisibility,100));
-  </script>
+// PWA install
+let deferredPrompt; const installBtn=document.getElementById('installBtn');
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBtn.style.display="inline-block";});
+installBtn.addEventListener('click',async()=>{
+  deferredPrompt.prompt(); await deferredPrompt.userChoice; installBtn.style.display="none";
+});
+</script>
 </body>
 </html>
