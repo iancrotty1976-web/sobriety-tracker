@@ -4,13 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sobriety & Drinking Tracker</title>
-
-  <!-- PWA -->
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="theme-color" content="#4facfe"/>
   <link rel="icon" href="icons/icon-192.png" />
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-
   <style>
     :root { color-scheme: light dark; }
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background: #f2f4f8; color: #1f2937; }
@@ -27,7 +24,24 @@
     .stat .num { font-size: 22px; font-weight: 700; color: #0f62fe; }
     .row { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
     label { font-size: 13px; color: #374151; }
-    textarea, input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #d1d5db; background: #fff; }
+    
+    /* Fixed input styling for visibility */
+    textarea, input, select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      color: #111;          /* make text dark and visible */
+      font-size: 15px;      /* slightly bigger text */
+      line-height: 1.4;     /* better spacing */
+    }
+
+    textarea::placeholder,
+    input::placeholder {
+      color: #9ca3af;       /* subtle grey for placeholders */
+    }
+    
     textarea:focus, input:focus, select:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px #6366f11f; }
     .btn { padding: 10px 14px; background: #4facfe; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
     .btn:hover { background: #3a8edb; }
@@ -88,11 +102,11 @@
         <div class="row">
           <div>
             <label>Volume (ml)</label>
-            <input id="drinkMl" type="number" inputmode="numeric" />
+            <input id="drinkMl" type="number" inputmode="numeric" placeholder="330" />
           </div>
           <div>
             <label>Alcohol % (ABV)</label>
-            <input id="drinkAbv" type="number" step="0.1" inputmode="decimal" />
+            <input id="drinkAbv" type="number" step="0.1" inputmode="decimal" placeholder="5.0" />
           </div>
         </div>
         <div class="flex" style="margin-top:10px;">
@@ -141,6 +155,11 @@
           📲 Install App
         </button>
 
+        <!-- Reset Progress Button -->
+        <button id="resetBtn" class="btn" type="button" style="margin-top:10px; background:#ef4444;">
+          🔄 Reset Progress
+        </button>
+
         <div style="height:8px;"></div>
 
         <!-- Notifications -->
@@ -155,7 +174,7 @@
         <div class="muted" id="reminderStatus" style="margin-top:6px;"></div>
 
         <p class="muted" style="margin-top:10px;">
-          iPhone users: open this site in Safari, tap Share, then “Add to Home Screen”.
+          iPhone users: open this site in Safari, tap Share, then "Add to Home Screen".
         </p>
       </div>
 
@@ -171,16 +190,16 @@
 
     // ---- Progress / Drinks / Money
     let drinksThisWeek = ls.get('drinksThisWeek', 0);
-    let firstSoberDate = ls.get('firstSoberDate', null); // ISO string
+    let firstSoberDate = ls.get('firstSoberDate', null);
     let streak = ls.get('streak', 0);
-    const drinkPrice = 5; // £ per drink (rough)
+    const drinkPrice = 5;
 
     function renderStats() {
       document.getElementById('drinksThisWeek').textContent = drinksThisWeek;
       document.getElementById('currentStreak').textContent = streak;
       const daysSober = calcDaysSober();
       document.getElementById('daysSober').textContent = daysSober;
-      const moneySaved = (streak > 0 ? streak : 0) * drinkPrice; // very rough proxy
+      const moneySaved = (streak > 0 ? streak : 0) * drinkPrice;
       document.getElementById('moneySaved').textContent = '£' + moneySaved;
     }
 
@@ -193,7 +212,6 @@
     }
 
     function resetSoberIfNeeded() {
-      // If a drink is added today, reset streak start to tomorrow
       const today = new Date();
       const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
       firstSoberDate = tomorrow.toISOString();
@@ -210,14 +228,24 @@
       toast('Logged a drink. New day, new start 💪');
     });
 
-    // Increment streak daily at midnight (simple check on load)
+    // Reset Progress Button
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      if (confirm("Are you sure you want to reset all progress?")) {
+        localStorage.clear();
+        drinksThisWeek = 0;
+        streak = 0;
+        firstSoberDate = null;
+        renderStats();
+        toast("Progress reset. Fresh start 🌱");
+      }
+    });
+
+    // Increment streak daily
     (function updateStreakDaily() {
       const key = 'lastStreakDay';
       const last = ls.get(key, null);
       const today = new Date().toDateString();
       if (last !== today) {
-        // if no drinks added today, increment streak
-        // (basic model; you can enhance with per-day logs)
         streak = (streak || 0) + 1;
         if (!firstSoberDate) firstSoberDate = new Date().toISOString();
         ls.set('firstSoberDate', firstSoberDate);
@@ -244,7 +272,7 @@
       setTimeout(() => diaryMsgEl.textContent = '', 2000);
     });
 
-    // ---- Daily Motivation (stable quote per day)
+    // ---- Daily Motivation
     const QUOTES = [
       { q: "One day at a time.", a: "AA Slogan" },
       { q: "You are stronger than your strongest excuse.", a: "Unknown" },
@@ -260,7 +288,7 @@
       return seed % n;
     }
     const qi = dailyIndex(QUOTES.length);
-    document.getElementById('quoteBox').textContent = '“' + QUOTES[qi].q + '”';
+    document.getElementById('quoteBox').textContent = '"' + QUOTES[qi].q + '"';
     document.getElementById('quoteAttribution').textContent = '— ' + QUOTES[qi].a;
 
     // ---- Reminders / Notifications
@@ -268,7 +296,6 @@
     const reminderTimeEl = document.getElementById('reminderTime');
     const reminderStatusEl = document.getElementById('reminderStatus');
 
-    // Load saved settings
     const savedEnabled = ls.get('reminderEnabled', false);
     const savedTime = ls.get('reminderTime', '20:00');
     reminderEnabledEl.checked = !!savedEnabled;
@@ -282,7 +309,6 @@
     }
 
     function scheduleTick() {
-      // Polling approach (simple, works without alarms)
       clearInterval(window.__reminderTimer);
       if (!reminderEnabledEl.checked) {
         reminderStatusEl.textContent = 'Daily reminder is off.';
@@ -293,7 +319,6 @@
       window.__reminderTimer = setInterval(() => {
         const now = new Date();
         if (now.getHours() === hh && now.getMinutes() === mm && now.getSeconds() < 5) {
-          // Only notify once per day
           const key = 'reminderLast:' + now.toDateString();
           if (ls.get(key, null)) return;
           ls.set(key, true);
@@ -328,7 +353,7 @@
 
     scheduleTick();
 
-    // ---- Tiny toast helper
+    // ---- Toast helper
     function toast(msg) {
       try {
         if (!window.__toastEl) {
@@ -384,7 +409,7 @@
         deferredPrompt = null;
         installBtn.style.display = 'none';
       } else {
-        alert("Tip: In your browser menu choose ‘Install app’ or ‘Add to Home screen’");
+        alert("Tip: In your browser menu choose 'Install app' or 'Add to Home screen'");
       }
     });
 
