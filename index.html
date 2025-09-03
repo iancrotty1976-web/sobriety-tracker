@@ -41,6 +41,10 @@
     .diary-note { margin-top:6px; white-space:pre-wrap; line-height:1.4; }
     .diary-history { max-height:300px; overflow-y:auto; }
     #confettiCanvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 3000; display: none; }
+
+    /* Modals */
+    .modal-overlay { position:fixed; inset:0; background:#000000cc; display:none; align-items:center; justify-content:center; z-index: 4000; }
+    .modal { background:white; padding:20px; border-radius:12px; max-width:420px; width:90%; }
   </style>
 </head>
 <body>
@@ -60,6 +64,9 @@
           <div class="stat"><div class="num" id="currentStreak">0</div><div class="muted">Current Streak</div></div>
           <div class="stat"><div class="num" id="longestStreak">0</div><div class="muted">Longest Streak</div></div>
           <div class="stat"><div class="num" id="moneySaved">£0</div><div class="muted">Money Saved</div></div>
+        </div>
+        <div class="muted" id="spendHint" style="margin-top:8px; display:none;">
+          Tip: Set your weekly spend to see accurate savings.
         </div>
       </div>
 
@@ -106,8 +113,9 @@
         </div>
         <div class="muted" id="reminderStatus"></div>
         
-        <div style="margin-top:12px;">
+        <div style="margin-top:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
           <button id="changeSpendBtn" class="btn btn-sm btn-primary">Change Weekly Spend</button>
+          <button id="reaskSetupBtn" class="btn btn-sm" style="background:#6b7280;">Ask weekly spend again</button>
           <span class="muted" id="currentSpend">Not set</span>
         </div>
         
@@ -121,20 +129,22 @@
   </div>
 
   <!-- Setup Modal -->
-  <div id="setupModal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#000000dd;display:none;align-items:center;justify-content:center;z-index:1000;">
-    <div style="background:white;padding:20px;border-radius:12px;max-width:420px;width:90%;">
+  <div id="setupModal" class="modal-overlay">
+    <div class="modal">
       <h3>Welcome 🎉</h3>
       <p>Let's personalise your journey.</p>
       <label>How much money do you spend per week on alcohol (on average)?</label>
       <input id="baselineSpend" type="number" placeholder="£ per week" />
-      <button id="saveSetup" class="btn btn-primary" style="margin-top:10px;">Save & Continue</button>
-      <button id="skipSetup" class="btn" style="background:#6b7280;margin-top:10px;margin-left:10px;">Skip for now</button>
+      <div style="margin-top:10px;">
+        <button id="saveSetup" class="btn btn-primary">Save & Continue</button>
+        <button id="skipSetup" class="btn" style="background:#6b7280;margin-left:10px;">Skip for now</button>
+      </div>
     </div>
   </div>
 
   <!-- Change Spend Modal -->
-  <div id="changeSpendModal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#000000dd;display:none;align-items:center;justify-content:center;z-index:1000;">
-    <div style="background:white;padding:20px;border-radius:12px;max-width:420px;width:90%;">
+  <div id="changeSpendModal" class="modal-overlay">
+    <div class="modal">
       <h3>Update Weekly Spend</h3>
       <label>How much money do you spend per week on alcohol (on average)?</label>
       <input id="newBaselineSpend" type="number" placeholder="£ per week" />
@@ -146,8 +156,8 @@
   </div>
 
   <!-- Milestone Celebration Modal -->
-  <div id="milestoneModal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:2000;">
-    <div style="background:white;padding:20px;border-radius:12px;max-width:400px;width:90%;text-align:center;">
+  <div id="milestoneModal" class="modal-overlay" style="background:#000a; z-index: 4500;">
+    <div class="modal" style="text-align:center; max-width:400px;">
       <h2 id="milestoneTitle">🎉 Congrats!</h2>
       <p id="milestoneMessage">You hit a milestone!</p>
       <button onclick="closeMilestone()" 
@@ -167,16 +177,27 @@ const ls = {
   del:(k)=>localStorage.removeItem(k)
 };
 
-let firstSoberDate = ls.get('firstSoberDate',null);
-let streak = ls.get('streak',0);
-let longestStreak = ls.get('longestStreak',0);
-let baselineSpend = ls.get('baselineSpend', null);
+// Read baselineSpend safely as a Number (NaN if missing)
+let baselineSpend = Number(ls.get('baselineSpend', NaN));
+if (typeof baselineSpend !== 'number' || isNaN(baselineSpend)) baselineSpend = NaN;
 
+let firstSoberDate = ls.get('firstSoberDate',null);
+let streak = Number(ls.get('streak',0)) || 0;
+let longestStreak = Number(ls.get('longestStreak',0)) || 0;
+
+// Elements
 const reminderEnabledEl = document.getElementById('reminderEnabled');
 const reminderTimeEl = document.getElementById('reminderTime');
 const reminderStatusEl = document.getElementById('reminderStatus');
+const spendHintEl = document.getElementById('spendHint');
+const currentSpendEl = document.getElementById('currentSpend');
+
 reminderEnabledEl.checked = !!ls.get('reminderEnabled', false);
 reminderTimeEl.value = ls.get('reminderTime', '20:00');
+
+// Utils
+function show(el){ el.style.display='flex'; }
+function hide(el){ el.style.display='none'; }
 
 function calcDaysSober(){
   if(!firstSoberDate) return 0;
@@ -191,12 +212,12 @@ function checkMilestones() {
   if (milestones.includes(days)) {
     document.getElementById("milestoneTitle").textContent = "🎉 Congrats!";
     document.getElementById("milestoneMessage").textContent = `You’ve reached ${days} days sober! Keep going 💪`;
-    document.getElementById("milestoneModal").style.display = "flex";
+    show(document.getElementById("milestoneModal"));
     startConfetti(250);
   }
 }
 function closeMilestone() {
-  document.getElementById('milestoneModal').style.display = 'none';
+  hide(document.getElementById('milestoneModal'));
   stopConfetti();
 }
 
@@ -205,17 +226,18 @@ function renderStats(){
   document.getElementById('daysSober').textContent = calcDaysSober();
   document.getElementById('longestStreak').textContent = longestStreak;
   
-  if(baselineSpend && baselineSpend > 0){
+  if(typeof baselineSpend === 'number' && !isNaN(baselineSpend) && baselineSpend > 0){
     const dailySpend = baselineSpend / 7;
     const daysSober = calcDaysSober();
     const saved = Math.round(dailySpend * daysSober);
     document.getElementById('moneySaved').textContent = "£" + saved;
+    spendHintEl.style.display = 'none';
+    currentSpendEl.textContent = `Currently: £${baselineSpend}/week`;
   } else {
     document.getElementById('moneySaved').textContent = "£0";
+    spendHintEl.style.display = 'block';
+    currentSpendEl.textContent = "Not set";
   }
-  
-  const currentSpendEl = document.getElementById('currentSpend');
-  currentSpendEl.textContent = baselineSpend > 0 ? `Currently: £${baselineSpend}/week` : "Not set";
 
   checkMilestones();
 }
@@ -234,7 +256,7 @@ function renderStats(){
 })();
 renderStats();
 
-// Diary
+// ==== Diary ====
 const diaryDateEl=document.getElementById('diaryDate'),
       diaryMoodEl=document.getElementById('diaryMood'),
       diaryEl=document.getElementById('diary'),
@@ -295,7 +317,7 @@ function escapeHtml(str) {
 }
 renderDiaryHistory();
 
-// Relapse
+// ==== Relapse ====
 document.getElementById('relapseBtn').addEventListener('click',()=>{
   if(confirm("Log a relapse? This will reset your streak to 0.")){
     if(streak>longestStreak){ longestStreak=streak; ls.set('longestStreak',streak);}
@@ -306,7 +328,7 @@ document.getElementById('relapseBtn').addEventListener('click',()=>{
   }
 });
 
-// Reset
+// ==== Reset (stats only; diary preserved) ====
 document.getElementById('resetBtn').addEventListener('click',()=>{
   if(confirm("Reset ALL stats (diary will remain)?")){
     streak=0; firstSoberDate=null; longestStreak=0;
@@ -315,7 +337,7 @@ document.getElementById('resetBtn').addEventListener('click',()=>{
   }
 });
 
-// Motivation
+// ==== Quotes ====
 const QUOTES=[
   {q:"One day at a time.",a:"AA Slogan"},
   {q:"Progress, not perfection.",a:"AA Slogan"},
@@ -327,49 +349,68 @@ const qi=(new Date().getFullYear()*1000+(new Date().getMonth()+1)*50+new Date().
 document.getElementById('quoteBox').textContent='"'+QUOTES[qi].q+'"';
 document.getElementById('quoteAttribution').textContent="— "+QUOTES[qi].a;
 
-// Setup Questions (only shows if not set)
-if(baselineSpend === null || baselineSpend === undefined){
-  document.getElementById('setupModal').style.display="flex";
+// ==== Weekly Spend Setup (auto show if not set or <= 0) ====
+const setupModal = document.getElementById('setupModal');
+const baselineSpendInput = document.getElementById('baselineSpend');
+
+function openSetupModal() {
+  show(setupModal);
+  // Autofill current value if any
+  baselineSpendInput.value = (typeof baselineSpend==='number' && !isNaN(baselineSpend) && baselineSpend>0) ? baselineSpend : '';
+  setTimeout(()=>baselineSpendInput.focus(), 50);
 }
+function closeSetupModal() { hide(setupModal); }
+
+if (!(typeof baselineSpend==='number' && !isNaN(baselineSpend) && baselineSpend>0)) {
+  openSetupModal();
+}
+
 document.getElementById('saveSetup').addEventListener('click',()=>{
-  const spend=parseFloat(document.getElementById('baselineSpend').value||"0");
-  if(spend > 0){
+  const spend=parseFloat(baselineSpendInput.value||"");
+  if(!isNaN(spend) && spend>0){
     baselineSpend = spend; 
     ls.set('baselineSpend', spend);
-    document.getElementById('setupModal').style.display="none";
+    closeSetupModal();
     renderStats();
   } else {
-    alert("Please enter a valid amount (£ per week)");
+    alert("Please enter a valid amount greater than 0 (£ per week)");
   }
 });
 document.getElementById('skipSetup').addEventListener('click',()=>{
   baselineSpend = 0;
   ls.set('baselineSpend', 0);
-  document.getElementById('setupModal').style.display="none";
+  closeSetupModal();
   renderStats();
 });
 
-// Change spend functionality (restored)
-document.getElementById('changeSpendBtn').addEventListener('click',()=>{
-  document.getElementById('newBaselineSpend').value = baselineSpend ?? '';
-  document.getElementById('changeSpendModal').style.display="flex";
-});
+// ==== Change spend (always available) ====
+const changeSpendModal = document.getElementById('changeSpendModal');
+const newBaselineSpendInput = document.getElementById('newBaselineSpend');
+function openChangeSpend() {
+  newBaselineSpendInput.value = (typeof baselineSpend==='number' && !isNaN(baselineSpend) && baselineSpend>=0) ? baselineSpend : '';
+  show(changeSpendModal);
+  setTimeout(()=>newBaselineSpendInput.focus(), 50);
+}
+function closeChangeSpend(){ hide(changeSpendModal); }
+
+document.getElementById('changeSpendBtn').addEventListener('click', openChangeSpend);
 document.getElementById('saveNewSpend').addEventListener('click',()=>{
-  const newSpend = parseFloat(document.getElementById('newBaselineSpend').value||"0");
+  const newSpend = parseFloat(newBaselineSpendInput.value||"");
   if(!isNaN(newSpend) && newSpend >= 0){
     baselineSpend = newSpend;
     ls.set('baselineSpend', newSpend);
-    document.getElementById('changeSpendModal').style.display="none";
+    closeChangeSpend();
     renderStats();
   } else {
-    alert("Please enter a valid amount (£ per week, or 0)");
+    alert("Please enter a valid amount (£ per week, 0 or more)");
   }
 });
-document.getElementById('cancelChangeSpend').addEventListener('click',()=>{
-  document.getElementById('changeSpendModal').style.display="none";
-});
+document.getElementById('cancelChangeSpend').addEventListener('click', closeChangeSpend);
 
-// Reminders
+// Re-ask initial setup on demand
+document.getElementById('reaskSetupBtn').addEventListener('click', openSetupModal);
+
+// ==== Reminders ====
 function requestPermissionIfNeeded() {
   if (!('Notification' in window)) return Promise.resolve('unsupported');
   if (Notification.permission === 'granted') return Promise.resolve('granted');
@@ -417,7 +458,7 @@ document.getElementById('saveReminder').addEventListener('click', async () => {
 });
 scheduleTick();
 
-// PWA install
+// ==== PWA install ====
 let deferredPrompt; const installBtn=document.getElementById('installBtn');
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;installBtn.style.display="inline-block";});
 installBtn.addEventListener('click',async()=>{
@@ -425,7 +466,7 @@ installBtn.addEventListener('click',async()=>{
   deferredPrompt.prompt(); await deferredPrompt.userChoice; installBtn.style.display="none";
 });
 
-// Service Worker Registration
+// ==== Service Worker Registration ====
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js')
