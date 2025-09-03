@@ -4,10 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sobriety Tracker</title>
+  
+  <!-- PWA and Icon Links -->
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="theme-color" content="#4facfe"/>
   <link rel="icon" href="icons/icon-192.png" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <!-- End PWA and Icon Links -->
+  
   <style>
     body { font-family: system-ui, sans-serif; margin:0; background:#f2f4f8; color:#1f2937; }
     header { background: linear-gradient(135deg,#4facfe,#00f2fe); color:white; padding:28px 20px; text-align:center; }
@@ -407,6 +411,19 @@ installBtn.addEventListener('click',async()=>{
   if(!deferredPrompt) return alert("Tip: choose 'Install app' from your browser menu");
   deferredPrompt.prompt(); await deferredPrompt.userChoice; installBtn.style.display="none";
 });
+
+// Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then((registration) => {
+        console.log('SW registered: ', registration);
+      })
+      .catch((registrationError) => {
+        console.log('SW registration failed: ', registrationError);
+      });
+  });
+}
 </script>
 </body>
 </html>
