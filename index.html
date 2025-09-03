@@ -25,11 +25,17 @@
     .btn-primary:hover { background:#3a8edb;}
     .btn-danger { background:#ef4444; }
     .btn-danger:hover { background:#dc2626; }
+    .btn-sm { padding:6px 10px; font-size:12px; }
     .muted{color:#6b7280;font-size:13px;}
     textarea,input,select{width:100%;padding:10px;border-radius:8px;border:1px solid #d1d5db;background:#fff;
       color:#000;font-size:16px;line-height:1.4;-webkit-text-fill-color:#000 !important;}
     .quote{background:linear-gradient(135deg,#eef2ff,#ecfeff);border:1px solid #dbeafe;border-radius:10px;padding:12px;}
     .flex { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .diary-entry { margin-bottom:12px; padding:12px; border:1px solid #e5e7eb; border-radius:8px; background:#fcfdff; }
+    .diary-date { font-weight:700; color:#1f2937; }
+    .diary-mood { font-style:italic; color:#6b7280; margin-left:8px; }
+    .diary-note { margin-top:6px; white-space:pre-wrap; line-height:1.4; }
+    .diary-history { max-height:300px; overflow-y:auto; }
   </style>
 </head>
 <body>
@@ -63,10 +69,12 @@
         <div class="muted" id="diarySavedMsg"></div>
       </div>
 
-      <!-- Diary History -->
+      <!-- Diary History (Scrollable Journal) -->
       <div class="card">
-        <h3>Diary History</h3>
-        <div id="diaryHistory" class="muted">No entries yet.</div>
+        <h3>Journal History</h3>
+        <div class="diary-history" id="diaryHistory">
+          <div class="muted">No entries yet.</div>
+        </div>
       </div>
 
       <!-- Relapse -->
@@ -92,23 +100,43 @@
           <button id="saveReminder" class="btn btn-primary">Save</button>
         </div>
         <div class="muted" id="reminderStatus"></div>
+        
+        <div style="margin-top:12px;">
+          <button id="changeSpendBtn" class="btn btn-sm btn-primary">Change Weekly Spend</button>
+          <span class="muted" id="currentSpend">Not set</span>
+        </div>
+        
         <div style="height:10px;"></div>
         <button id="installBtn" class="btn btn-primary" type="button" style="display:none;">📲 Install App</button>
         <button id="resetBtn" class="btn btn-danger" style="margin-left:10px;">Reset Progress</button>
-        <p class="muted" style="margin-top:8px;">Note: Browser notifications are best-effort. For guaranteed background alerts, we can add Web Push later.</p>
+        <p class="muted" style="margin-top:8px;">Note: Browser notifications only work when app is open. For background alerts, we can add Web Push later.</p>
       </div>
 
     </div>
   </div>
 
   <!-- Setup Modal -->
-  <div id="setupModal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#000000dd;display:none;align-items:center;justify-content:center;">
+  <div id="setupModal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#000000dd;display:none;align-items:center;justify-content:center;z-index:1000;">
     <div style="background:white;padding:20px;border-radius:12px;max-width:420px;width:90%;">
       <h3>Welcome 🎉</h3>
-      <p>Let’s personalise your journey.</p>
+      <p>Let's personalise your journey.</p>
       <label>How much money do you spend per week on alcohol (on average)?</label>
       <input id="baselineSpend" type="number" placeholder="£ per week" />
       <button id="saveSetup" class="btn btn-primary" style="margin-top:10px;">Save & Continue</button>
+      <button id="skipSetup" class="btn" style="background:#6b7280;margin-top:10px;margin-left:10px;">Skip for now</button>
+    </div>
+  </div>
+
+  <!-- Change Spend Modal -->
+  <div id="changeSpendModal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#000000dd;display:none;align-items:center;justify-content:center;z-index:1000;">
+    <div style="background:white;padding:20px;border-radius:12px;max-width:420px;width:90%;">
+      <h3>Update Weekly Spend</h3>
+      <label>How much money do you spend per week on alcohol (on average)?</label>
+      <input id="newBaselineSpend" type="number" placeholder="£ per week" />
+      <div style="margin-top:10px;">
+        <button id="saveNewSpend" class="btn btn-primary">Update</button>
+        <button id="cancelChangeSpend" class="btn" style="background:#6b7280;margin-left:10px;">Cancel</button>
+      </div>
     </div>
   </div>
 
@@ -136,19 +164,32 @@ function renderStats(){
   document.getElementById('currentStreak').textContent = streak;
   document.getElementById('daysSober').textContent = calcDaysSober();
   document.getElementById('longestStreak').textContent = longestStreak;
-  if(baselineSpend){
-    const daily = baselineSpend/7;
-    const saved = Math.round(daily*calcDaysSober());
-    document.getElementById('moneySaved').textContent = "£"+saved;
+  
+  // Money saved calculation
+  if(baselineSpend && baselineSpend > 0){
+    const dailySpend = baselineSpend / 7;
+    const daysSober = calcDaysSober();
+    const saved = Math.round(dailySpend * daysSober);
+    document.getElementById('moneySaved').textContent = "£" + saved;
   } else {
-    document.getElementById('moneySaved').textContent="£0";
+    document.getElementById('moneySaved').textContent = "£0";
+  }
+  
+  // Update current spend display
+  const currentSpendEl = document.getElementById('currentSpend');
+  if(baselineSpend && baselineSpend > 0) {
+    currentSpendEl.textContent = `Currently: £${baselineSpend}/week`;
+  } else {
+    currentSpendEl.textContent = "Not set";
   }
 }
+
 function calcDaysSober(){
   if(!firstSoberDate) return 0;
   const s=new Date(firstSoberDate), n=new Date();
   return Math.max(0,Math.floor((n-s)/(1000*60*60*24)));
 }
+
 // update daily streak (once per calendar day)
 (function daily(){
   const k='lastStreakDay', last=ls.get(k,null), today=new Date().toDateString();
@@ -169,30 +210,65 @@ const diaryDateEl=document.getElementById('diaryDate'),
       diaryEl=document.getElementById('diary'),
       diaryMsgEl=document.getElementById('diarySavedMsg');
 diaryDateEl.valueAsDate=new Date();
+
 document.getElementById('saveDiary').addEventListener('click',()=>{
-  const key='diary:'+ (diaryDateEl.value||new Date().toISOString().slice(0,10));
-  const entry={date:diaryDateEl.value,mood:diaryMoodEl.value,note:diaryEl.value,savedAt:new Date().toISOString()};
+  const dateVal = diaryDateEl.value || new Date().toISOString().slice(0,10);
+  const key='diary:'+ dateVal;
+  const entry={
+    date: dateVal,
+    mood: diaryMoodEl.value,
+    note: diaryEl.value,
+    savedAt: new Date().toISOString()
+  };
   ls.set(key,entry);
   diaryMsgEl.textContent='Saved ✔';
   setTimeout(()=>diaryMsgEl.textContent='',2000);
   renderDiaryHistory();
 });
-// Diary History
+
+// Improved Diary History (scrollable journal)
 function renderDiaryHistory(){
-  const historyEl=document.getElementById('diaryHistory'); const entries=[];
-  for(let i=0;i<localStorage.length;i++){
-    const k=localStorage.key(i);
+  const historyEl = document.getElementById('diaryHistory');
+  const entries = [];
+  
+  for(let i=0; i<localStorage.length; i++){
+    const k = localStorage.key(i);
     if(k && k.startsWith("diary:")) {
-      try { entries.push(JSON.parse(localStorage.getItem(k))); } catch {}
+      try { 
+        const entry = JSON.parse(localStorage.getItem(k));
+        if(entry) entries.push(entry);
+      } catch {}
     }
   }
-  entries.sort((a,b)=> new Date(b.date)-new Date(a.date));
-  if(entries.length===0){historyEl.textContent="No entries yet.";return;}
-  historyEl.innerHTML=entries.map(e=>`
-    <div style="margin-bottom:8px;padding:6px;border-bottom:1px solid #eee;">
-      <strong>${e.date||'Unknown date'}</strong> — <em>${e.mood||'—'}</em><br>${e.note?e.note:""}
-    </div>`).join("");
+  
+  entries.sort((a,b) => new Date(b.date) - new Date(a.date));
+  
+  if(entries.length === 0){
+    historyEl.innerHTML = '<div class="muted">No entries yet.</div>';
+    return;
+  }
+  
+  historyEl.innerHTML = entries.map(entry => `
+    <div class="diary-entry">
+      <div>
+        <span class="diary-date">${entry.date || 'Unknown date'}</span>
+        <span class="diary-mood">— ${entry.mood || 'No mood'}</span>
+      </div>
+      ${entry.note ? `<div class="diary-note">${escapeHtml(entry.note)}</div>` : '<div class="muted">No notes</div>'}
+    </div>
+  `).join('');
 }
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+    .replace(/\n/g, '<br/>');
+}
+
 renderDiaryHistory();
 
 // Relapse
@@ -216,24 +292,61 @@ document.getElementById('resetBtn').addEventListener('click',()=>{
 });
 
 // Motivation
-const QUOTES=[{q:"One day at a time.",a:"AA Slogan"},{q:"Progress, not perfection.",a:"AA Slogan"},{q:"You are stronger than your strongest excuse.",a:"Unknown"}];
+const QUOTES=[
+  {q:"One day at a time.",a:"AA Slogan"},
+  {q:"Progress, not perfection.",a:"AA Slogan"},
+  {q:"You are stronger than your strongest excuse.",a:"Unknown"},
+  {q:"The comeback is always stronger than the setback.",a:"Unknown"},
+  {q:"Small steps every day lead to big results.",a:"Unknown"}
+];
 const qi=(new Date().getFullYear()*1000+(new Date().getMonth()+1)*50+new Date().getDate())%QUOTES.length;
 document.getElementById('quoteBox').textContent='"'+QUOTES[qi].q+'"';
 document.getElementById('quoteAttribution').textContent="— "+QUOTES[qi].a;
 
 // Setup Questions
-if(!baselineSpend){
+if(baselineSpend === null || baselineSpend === undefined){
   document.getElementById('setupModal').style.display="flex";
 }
+
 document.getElementById('saveSetup').addEventListener('click',()=>{
   const spend=parseFloat(document.getElementById('baselineSpend').value||"0");
-  if(spend>0){
-    baselineSpend=spend; ls.set('baselineSpend',spend);
+  if(spend > 0){
+    baselineSpend = spend; 
+    ls.set('baselineSpend', spend);
     document.getElementById('setupModal').style.display="none";
     renderStats();
   } else {
     alert("Please enter a valid amount (£ per week)");
   }
+});
+
+document.getElementById('skipSetup').addEventListener('click',()=>{
+  baselineSpend = 0; // Set to 0 so modal doesn't show again
+  ls.set('baselineSpend', 0);
+  document.getElementById('setupModal').style.display="none";
+  renderStats();
+});
+
+// Change spend functionality
+document.getElementById('changeSpendBtn').addEventListener('click',()=>{
+  document.getElementById('newBaselineSpend').value = baselineSpend || '';
+  document.getElementById('changeSpendModal').style.display="flex";
+});
+
+document.getElementById('saveNewSpend').addEventListener('click',()=>{
+  const newSpend = parseFloat(document.getElementById('newBaselineSpend').value||"0");
+  if(newSpend >= 0){
+    baselineSpend = newSpend;
+    ls.set('baselineSpend', newSpend);
+    document.getElementById('changeSpendModal').style.display="none";
+    renderStats();
+  } else {
+    alert("Please enter a valid amount (£ per week, or 0)");
+  }
+});
+
+document.getElementById('cancelChangeSpend').addEventListener('click',()=>{
+  document.getElementById('changeSpendModal').style.display="none";
 });
 
 // Reminders (best-effort in-app)
@@ -243,6 +356,7 @@ function requestPermissionIfNeeded() {
   if (Notification.permission === 'denied') return Promise.resolve('denied');
   return Notification.requestPermission();
 }
+
 function fireReminder() {
   const title = 'Daily check-in';
   const body = 'How are you feeling? Log a diary entry or update your progress.';
@@ -253,6 +367,7 @@ function fireReminder() {
     alert(body);
   }
 }
+
 function scheduleTick() {
   clearInterval(window.__reminderTimer);
   if (!reminderEnabledEl.checked) {
@@ -271,6 +386,7 @@ function scheduleTick() {
     }
   }, 1000);
 }
+
 document.getElementById('saveReminder').addEventListener('click', async () => {
   ls.set('reminderEnabled', reminderEnabledEl.checked);
   ls.set('reminderTime', reminderTimeEl.value || '20:00');
