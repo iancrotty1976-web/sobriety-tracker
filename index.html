@@ -40,6 +40,17 @@
     .diary-mood { font-style:italic; color:#6b7280; margin-left:8px; }
     .diary-note { margin-top:6px; white-space:pre-wrap; line-height:1.4; }
     .diary-history { max-height:300px; overflow-y:auto; }
+
+    /* Confetti canvas overlay */
+    #confettiCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 3000;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -144,6 +155,21 @@
     </div>
   </div>
 
+  <!-- Milestone Celebration Modal -->
+  <div id="milestoneModal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:2000;">
+    <div style="background:white;padding:20px;border-radius:12px;max-width:400px;width:90%;text-align:center;">
+      <h2 id="milestoneTitle">🎉 Congrats!</h2>
+      <p id="milestoneMessage">You hit a milestone!</p>
+      <button onclick="closeMilestone()" 
+        style="margin-top:10px;background:#4facfe;color:white;padding:10px 14px;border:none;border-radius:8px;cursor:pointer;font-weight:600;">
+        Awesome!
+      </button>
+    </div>
+  </div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confettiCanvas"></canvas>
+
 <script>
 const ls = {
   get:(k,d=null)=>{ try{return JSON.parse(localStorage.getItem(k)) ?? d;}catch{return d;} },
@@ -151,25 +177,44 @@ const ls = {
   del:(k)=>localStorage.removeItem(k)
 };
 
-let drinksThisWeek = ls.get('drinksThisWeek',0);
 let firstSoberDate = ls.get('firstSoberDate',null);
 let streak = ls.get('streak',0);
 let longestStreak = ls.get('longestStreak',0);
 let baselineSpend = ls.get('baselineSpend', null);
 
-// Reminders state
 const reminderEnabledEl = document.getElementById('reminderEnabled');
 const reminderTimeEl = document.getElementById('reminderTime');
 const reminderStatusEl = document.getElementById('reminderStatus');
 reminderEnabledEl.checked = !!ls.get('reminderEnabled', false);
 reminderTimeEl.value = ls.get('reminderTime', '20:00');
 
+function calcDaysSober(){
+  if(!firstSoberDate) return 0;
+  const s=new Date(firstSoberDate), n=new Date();
+  return Math.max(0,Math.floor((n-s)/(1000*60*60*24)));
+}
+
+// 🎉 Milestone Celebration
+function checkMilestones() {
+  const milestones = [7, 30, 90, 180, 365];
+  const days = calcDaysSober();
+  if (milestones.includes(days)) {
+    document.getElementById("milestoneTitle").textContent = "🎉 Congrats!";
+    document.getElementById("milestoneMessage").textContent = `You’ve reached ${days} days sober! Keep going 💪`;
+    document.getElementById("milestoneModal").style.display = "flex";
+    startConfetti(250); // launch confetti for 250 particles
+  }
+}
+function closeMilestone() {
+  document.getElementById('milestoneModal').style.display = 'none';
+  stopConfetti();
+}
+
 function renderStats(){
   document.getElementById('currentStreak').textContent = streak;
   document.getElementById('daysSober').textContent = calcDaysSober();
   document.getElementById('longestStreak').textContent = longestStreak;
   
-  // Money saved calculation
   if(baselineSpend && baselineSpend > 0){
     const dailySpend = baselineSpend / 7;
     const daysSober = calcDaysSober();
@@ -179,22 +224,13 @@ function renderStats(){
     document.getElementById('moneySaved').textContent = "£0";
   }
   
-  // Update current spend display
   const currentSpendEl = document.getElementById('currentSpend');
-  if(baselineSpend && baselineSpend > 0) {
-    currentSpendEl.textContent = `Currently: £${baselineSpend}/week`;
-  } else {
-    currentSpendEl.textContent = "Not set";
-  }
+  currentSpendEl.textContent = baselineSpend > 0 ? `Currently: £${baselineSpend}/week` : "Not set";
+
+  checkMilestones();
 }
 
-function calcDaysSober(){
-  if(!firstSoberDate) return 0;
-  const s=new Date(firstSoberDate), n=new Date();
-  return Math.max(0,Math.floor((n-s)/(1000*60*60*24)));
-}
-
-// update daily streak (once per calendar day)
+// daily streak increment (once per day)
 (function daily(){
   const k='lastStreakDay', last=ls.get(k,null), today=new Date().toDateString();
   if(last!==today){
@@ -230,11 +266,10 @@ document.getElementById('saveDiary').addEventListener('click',()=>{
   renderDiaryHistory();
 });
 
-// Improved Diary History (scrollable journal)
+// Diary History
 function renderDiaryHistory(){
   const historyEl = document.getElementById('diaryHistory');
   const entries = [];
-  
   for(let i=0; i<localStorage.length; i++){
     const k = localStorage.key(i);
     if(k && k.startsWith("diary:")) {
@@ -244,14 +279,11 @@ function renderDiaryHistory(){
       } catch {}
     }
   }
-  
   entries.sort((a,b) => new Date(b.date) - new Date(a.date));
-  
   if(entries.length === 0){
     historyEl.innerHTML = '<div class="muted">No entries yet.</div>';
     return;
   }
-  
   historyEl.innerHTML = entries.map(entry => `
     <div class="diary-entry">
       <div>
@@ -262,7 +294,6 @@ function renderDiaryHistory(){
     </div>
   `).join('');
 }
-
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
@@ -272,7 +303,6 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;')
     .replace(/\n/g, '<br/>');
 }
-
 renderDiaryHistory();
 
 // Relapse
@@ -307,60 +337,13 @@ const qi=(new Date().getFullYear()*1000+(new Date().getMonth()+1)*50+new Date().
 document.getElementById('quoteBox').textContent='"'+QUOTES[qi].q+'"';
 document.getElementById('quoteAttribution').textContent="— "+QUOTES[qi].a;
 
-// Setup Questions
-if(baselineSpend === null || baselineSpend === undefined){
-  document.getElementById('setupModal').style.display="flex";
-}
-
-document.getElementById('saveSetup').addEventListener('click',()=>{
-  const spend=parseFloat(document.getElementById('baselineSpend').value||"0");
-  if(spend > 0){
-    baselineSpend = spend; 
-    ls.set('baselineSpend', spend);
-    document.getElementById('setupModal').style.display="none";
-    renderStats();
-  } else {
-    alert("Please enter a valid amount (£ per week)");
-  }
-});
-
-document.getElementById('skipSetup').addEventListener('click',()=>{
-  baselineSpend = 0; // Set to 0 so modal doesn't show again
-  ls.set('baselineSpend', 0);
-  document.getElementById('setupModal').style.display="none";
-  renderStats();
-});
-
-// Change spend functionality
-document.getElementById('changeSpendBtn').addEventListener('click',()=>{
-  document.getElementById('newBaselineSpend').value = baselineSpend || '';
-  document.getElementById('changeSpendModal').style.display="flex";
-});
-
-document.getElementById('saveNewSpend').addEventListener('click',()=>{
-  const newSpend = parseFloat(document.getElementById('newBaselineSpend').value||"0");
-  if(newSpend >= 0){
-    baselineSpend = newSpend;
-    ls.set('baselineSpend', newSpend);
-    document.getElementById('changeSpendModal').style.display="none";
-    renderStats();
-  } else {
-    alert("Please enter a valid amount (£ per week, or 0)");
-  }
-});
-
-document.getElementById('cancelChangeSpend').addEventListener('click',()=>{
-  document.getElementById('changeSpendModal').style.display="none";
-});
-
-// Reminders (best-effort in-app)
+// Reminders
 function requestPermissionIfNeeded() {
   if (!('Notification' in window)) return Promise.resolve('unsupported');
   if (Notification.permission === 'granted') return Promise.resolve('granted');
   if (Notification.permission === 'denied') return Promise.resolve('denied');
   return Notification.requestPermission();
 }
-
 function fireReminder() {
   const title = 'Daily check-in';
   const body = 'How are you feeling? Log a diary entry or update your progress.';
@@ -371,7 +354,6 @@ function fireReminder() {
     alert(body);
   }
 }
-
 function scheduleTick() {
   clearInterval(window.__reminderTimer);
   if (!reminderEnabledEl.checked) {
@@ -390,7 +372,6 @@ function scheduleTick() {
     }
   }, 1000);
 }
-
 document.getElementById('saveReminder').addEventListener('click', async () => {
   ls.set('reminderEnabled', reminderEnabledEl.checked);
   ls.set('reminderTime', reminderTimeEl.value || '20:00');
@@ -416,13 +397,92 @@ installBtn.addEventListener('click',async()=>{
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js')
-      .then((registration) => {
-        console.log('SW registered: ', registration);
-      })
-      .catch((registrationError) => {
-        console.log('SW registration failed: ', registrationError);
-      });
+      .then((registration) => console.log('SW registered: ', registration))
+      .catch((err) => console.log('SW registration failed: ', err));
   });
+}
+
+/* === Confetti (lightweight, no libs) === */
+let confettiRunning=false, confettiRAF=null, confettiParticles=[];
+const confettiCanvas=document.getElementById('confettiCanvas');
+const ctx=confettiCanvas.getContext('2d');
+
+function resizeConfetti() {
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeConfetti);
+resizeConfetti();
+
+function randomColor() {
+  const colors=['#ff4757','#ffa502','#2ed573','#1e90ff','#5352ed','#ff6b81','#70a1ff','#7bed9f'];
+  return colors[Math.floor(Math.random()*colors.length)];
+}
+function createParticles(count=200) {
+  const w=confettiCanvas.width, h=confettiCanvas.height;
+  confettiParticles = Array.from({length: count}).map(()=>({
+    x: Math.random()*w,
+    y: -20 - Math.random()*h*0.5,
+    r: 3 + Math.random()*4,
+    vx: -2 + Math.random()*4,
+    vy: 2 + Math.random()*3,
+    rot: Math.random()*Math.PI,
+    vr: -0.1 + Math.random()*0.2,
+    color: randomColor(),
+    shape: Math.random()<0.5 ? 'rect' : 'circle',
+    opacity: 0.8 + Math.random()*0.2
+  }));
+}
+function drawParticle(p) {
+  ctx.save();
+  ctx.globalAlpha = p.opacity;
+  ctx.translate(p.x, p.y);
+  ctx.rotate(p.rot);
+  ctx.fillStyle = p.color;
+  if (p.shape === 'rect') {
+    ctx.fillRect(-p.r*1.5, -p.r, p.r*3, p.r*2);
+  } else {
+    ctx.beginPath();
+    ctx.arc(0,0,p.r,0,Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+function updateParticles() {
+  const w=confettiCanvas.width, h=confettiCanvas.height;
+  for (const p of confettiParticles) {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.02; // gravity
+    p.rot += p.vr;
+    if (p.y > h + 30) {
+      p.y = -20;
+      p.x = Math.random()*w;
+      p.vy = 2 + Math.random()*3;
+    }
+  }
+}
+function renderConfetti() {
+  if (!confettiRunning) return;
+  ctx.clearRect(0,0,confettiCanvas.width, confettiCanvas.height);
+  for (const p of confettiParticles) drawParticle(p);
+  updateParticles();
+  confettiRAF = requestAnimationFrame(renderConfetti);
+}
+function startConfetti(count=220, durationMs=3500) {
+  if (confettiRunning) return;
+  confettiRunning = true;
+  confettiCanvas.style.display = 'block';
+  createParticles(count);
+  renderConfetti();
+  setTimeout(stopConfetti, durationMs);
+}
+function stopConfetti() {
+  if (!confettiRunning) return;
+  confettiRunning = false;
+  cancelAnimationFrame(confettiRAF);
+  ctx.clearRect(0,0,confettiCanvas.width, confettiCanvas.height);
+  confettiCanvas.style.display = 'none';
 }
 </script>
 </body>
